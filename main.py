@@ -1,5 +1,6 @@
 import uvicorn
 import httpx
+import json
 
 from fastapi import FastAPI, HTTPException, status, Header
 from fastapi.security import HTTPBearer
@@ -71,6 +72,50 @@ async def get_data_from_external_api(search: str, authorization: str = Header(No
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(central_base_api_url)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
+        except httpx.RequestError:
+            raise HTTPException(status_code=500, detail="Error connecting to external API")
+
+
+@app.post("/new_type")
+async def get_data_from_external_api(data: dict, authorization: str = Header(None)):
+    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/new_type/"
+    if authorization != f"Bearer {expected_token}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    headers = {
+        "Content-Type": "application/json; charset=utf-8"  # Вказуємо, що дані передаються у форматі JSON
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            json_data = json.dumps(data)
+            response = await client.post(central_base_api_url, data=json_data, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
+        except httpx.RequestError:
+            raise HTTPException(status_code=500, detail="Error connecting to external API")
+
+
+@app.post("/new_vendor")
+async def get_data_from_external_api(data: dict, authorization: str = Header(None)):
+    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/new_vendor/"
+    if authorization != f"Bearer {expected_token}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    headers = {
+        "Content-Type": "application/json; charset=utf-8"  # Вказуємо, що дані передаються у форматі JSON
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            json_data = json.dumps(data)
+            response = await client.post(central_base_api_url, data=json_data, headers=headers)
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
