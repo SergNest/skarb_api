@@ -5,6 +5,12 @@ import json
 from fastapi import FastAPI, HTTPException, status, Header
 from fastapi.security import HTTPBearer
 
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.decorator import cache
+
+from redis import asyncio as aioredis
+
 from conf.config import settings
 
 app = FastAPI()
@@ -13,10 +19,19 @@ security = HTTPBearer()
 expected_token = settings.expected_token
 
 
+async def startup():
+    redis = await aioredis.from_url(f"redis://{settings.redis_ip}:{settings.redis_port}", encoding="utf8", decode_responses=True)
+    FastAPICache.init(RedisBackend(redis), prefix="cache")
+
+
+@app.on_event("startup")
+async def startup_event():
+    await startup()
+
+
 @app.get("/api/healthchecker")
 def healthchecker():
     try:
-
         return {"message": "Welcome to FastAPI!"}
     except Exception as e:
         print(e)
@@ -47,6 +62,7 @@ async def get_data_from_external_api(client_id: str, authorization: str = Header
 
 
 @app.get("/gettype/{search}/{category_id}")
+@cache(expire=60)
 async def get_data_from_external_api(search: str, category_id: str, authorization: str = Header(None)):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/gettype/{search}/{category_id}"
     if authorization != f"Bearer {expected_token}":
@@ -64,6 +80,7 @@ async def get_data_from_external_api(search: str, category_id: str, authorizatio
 
 
 @app.get("/getvendor/{search}")
+@cache(expire=60)
 async def get_data_from_external_api(search: str, authorization: str = Header(None)):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/getvendor/{search}"
     if authorization != f"Bearer {expected_token}":
