@@ -2,14 +2,16 @@ import uvicorn
 import httpx
 import json
 
-from fastapi import FastAPI, HTTPException, status, Header
-from fastapi.security import HTTPBearer
+from redis import asyncio as aioredis
+from typing import Optional
+from pydantic import BaseModel
 
+from fastapi import FastAPI, HTTPException, status, Header, Query, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
-from redis import asyncio as aioredis
 
 from conf.config import settings
 
@@ -17,6 +19,20 @@ app = FastAPI()
 security = HTTPBearer()
 
 expected_token = settings.expected_token
+security = HTTPBearer()
+
+
+class SType(BaseModel):
+    name: str
+    guid: str
+    id: int
+    group_id: int
+
+
+class SVendor(BaseModel):
+    name: str
+    guid: str
+    id: int
 
 
 async def startup():
@@ -27,6 +43,17 @@ async def startup():
 @app.on_event("startup")
 async def startup_event():
     await startup()
+
+
+def authenticate(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    if token != expected_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return {"token": token}
 
 
 @app.get("/api/healthchecker")
@@ -61,12 +88,13 @@ async def get_data_from_external_api(client_id: str, authorization: str = Header
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
 
-@app.get("/gettype/{search}/{category_id}")
-@cache(expire=60)
-async def get_data_from_external_api(search: str, category_id: str, authorization: str = Header(None)):
+@app.get("/gettype", response_model=list[SType])
+@cache(expire=240)
+async def get_type_from_external_api(search: str,
+                                        category_id: int = Query(ge=1, le=11),
+                                        user: Optional[str] = Depends(authenticate)):
+
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/gettype/{search}/{category_id}"
-    if authorization != f"Bearer {expected_token}":
-        raise HTTPException(status_code=401, detail="Unauthorized")
 
     async with httpx.AsyncClient() as client:
         try:
@@ -79,12 +107,11 @@ async def get_data_from_external_api(search: str, category_id: str, authorizatio
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
 
-@app.get("/getvendor/{search}")
-@cache(expire=60)
-async def get_data_from_external_api(search: str, authorization: str = Header(None)):
+@app.get("/getvendor", response_model=list[SVendor])
+@cache(expire=240)
+async def get_vendor_from_external_api(search: str, user: Optional[str] = Depends(authenticate)):
+
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/getvendor/{search}"
-    if authorization != f"Bearer {expected_token}":
-        raise HTTPException(status_code=401, detail="Unauthorized")
 
     async with httpx.AsyncClient() as client:
         try:
@@ -98,10 +125,8 @@ async def get_data_from_external_api(search: str, authorization: str = Header(No
 
 
 @app.post("/new_type")
-async def get_data_from_external_api(data: dict, authorization: str = Header(None)):
+async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(authenticate)):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/new_type/"
-    if authorization != f"Bearer {expected_token}":
-        raise HTTPException(status_code=401, detail="Unauthorized")
 
     headers = {
         "Content-Type": "application/json; charset=utf-8"  # Вказуємо, що дані передаються у форматі JSON
@@ -120,10 +145,8 @@ async def get_data_from_external_api(data: dict, authorization: str = Header(Non
 
 
 @app.post("/new_vendor")
-async def get_data_from_external_api(data: dict, authorization: str = Header(None)):
+async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(authenticate)):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/new_vendor/"
-    if authorization != f"Bearer {expected_token}":
-        raise HTTPException(status_code=401, detail="Unauthorized")
 
     headers = {
         "Content-Type": "application/json; charset=utf-8"  # Вказуємо, що дані передаються у форматі JSON
