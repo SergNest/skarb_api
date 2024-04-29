@@ -12,7 +12,6 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
-
 from conf.config import settings
 
 app = FastAPI()
@@ -36,7 +35,8 @@ class SVendor(BaseModel):
 
 
 async def startup():
-    redis = await aioredis.from_url(f"redis://{settings.redis_ip}:{settings.redis_port}", encoding="utf8", decode_responses=True)
+    redis = await aioredis.from_url(f"redis://{settings.redis_ip}:{settings.redis_port}", encoding="utf8",
+                                    decode_responses=True)
     FastAPICache.init(RedisBackend(redis), prefix="cache")
 
 
@@ -88,11 +88,11 @@ async def get_data_from_external_api(client_id: str, authorization: str = Header
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
 
-@app.get("/gettype", response_model=list[SType])
+@app.get("/gettype/{search}/{category_id}", response_model=list[SType])
 @cache(expire=240)
 async def get_type_from_external_api(search: str,
-                                        category_id: int = Query(ge=1, le=11),
-                                        user: Optional[str] = Depends(authenticate)):
+                                     category_id: int,
+                                     user: Optional[str] = Depends(authenticate)):
 
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/gettype/{search}/{category_id}"
 
@@ -107,10 +107,9 @@ async def get_type_from_external_api(search: str,
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
 
-@app.get("/getvendor", response_model=list[SVendor])
+@app.get("/getvendor/{search}", response_model=list[SVendor])
 @cache(expire=240)
 async def get_vendor_from_external_api(search: str, user: Optional[str] = Depends(authenticate)):
-
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/getvendor/{search}"
 
     async with httpx.AsyncClient() as client:
@@ -162,6 +161,7 @@ async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(a
             raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
         except httpx.RequestError:
             raise HTTPException(status_code=500, detail="Error connecting to external API")
+
 
 if __name__ == '__main__':
     uvicorn.run(app="main:app", reload=True, port=55335)
