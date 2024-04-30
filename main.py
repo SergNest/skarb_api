@@ -4,34 +4,21 @@ import json
 
 from redis import asyncio as aioredis
 from typing import Optional
-from pydantic import BaseModel
 
-from fastapi import FastAPI, HTTPException, status, Header, Query, Depends
+from fastapi import FastAPI, HTTPException, status, Header, Depends, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
 from conf.config import settings
+from src.schema import SType, SVendor, SZok
 
 app = FastAPI()
 security = HTTPBearer()
 
 expected_token = settings.expected_token
 security = HTTPBearer()
-
-
-class SType(BaseModel):
-    name: str
-    guid: str
-    id: int
-    group_id: int
-
-
-class SVendor(BaseModel):
-    name: str
-    guid: str
-    id: int
 
 
 async def startup():
@@ -111,6 +98,23 @@ async def get_type_from_external_api(search: str,
 @cache(expire=240)
 async def get_vendor_from_external_api(search: str, user: Optional[str] = Depends(authenticate)):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/getvendor/{search}"
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(central_base_api_url)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
+        except httpx.RequestError:
+            raise HTTPException(status_code=500, detail="Error connecting to external API")
+
+
+@app.get("/checkzokbyphone", response_model=SZok)
+@cache(expire=3600)
+async def get_zok_by_phone(phone: str = Query(...), user: Optional[str] = Depends(authenticate)):
+    central_base_api_url = (f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/checkzokbyphone"
+                            f"?phone={phone}")
 
     async with httpx.AsyncClient() as client:
         try:
