@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import uvicorn
 import httpx
 import json
@@ -112,9 +114,12 @@ async def get_vendor_from_external_api(search: str, user: Optional[str] = Depend
 
 @app.get("/checkzokbyphone", response_model=SZok)
 @cache(expire=3600)
-async def get_zok_by_phone(phone: str = Query(...), user: Optional[str] = Depends(authenticate)):
+async def get_zok_by_phone(phone: str,
+                           date: Optional[datetime] = None,
+                           user: Optional[str] = Depends(authenticate)):
+
     central_base_api_url = (f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/checkzokbyphone"
-                            f"?phone={phone}")
+                            f"?phone={phone}&date={date}")
 
     async with httpx.AsyncClient() as client:
         try:
