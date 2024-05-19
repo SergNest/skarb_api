@@ -15,9 +15,11 @@ from conf.config import settings
 from src.schema import SType, SVendor
 
 from elombard.zok import router as zok
+from notifications.telegram_send import router as telegram_send
 
 app = FastAPI()
 app.include_router(zok)
+app.include_router(telegram_send)
 
 security = HTTPBearer()
 
@@ -47,7 +49,7 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 
 @app.get("/api/healthchecker")
-def healthchecker():
+async def healthchecker():
     try:
         return {"message": "Welcome to FastAPI!"}
     except Exception as e:

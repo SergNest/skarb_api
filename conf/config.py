@@ -8,6 +8,8 @@ load_dotenv()
 
 class Settings(BaseSettings):
 
+    bot_token: str = os.getenv('BOT_TOKEN', 'BOT_TOKEN')
+
     expected_token: str = os.getenv('EXPECTED_TOKEN', 'EXPECTED_TOKEN')
     ip_central: str = os.getenv('IP_CENTRAL', 'IP_CENTRAL')
     port_central: str = os.getenv('PORT_CENTRAL', 'PORT_CENTRAL')
