@@ -8,12 +8,7 @@ from bot import send_notification
 from notifications.schema import SMassage
 from conf.config import settings
 
-emoji_dict = {
-    "buy": "🟢 куплено",
-    "sell": "🔴 продано",
-    "dollar": "🇺🇸",
-    "euro": "🇪🇺"
-}
+emoji_dict = dict(buy="Куплено 🟢", sell="Продано 🔴", USD="🇺🇸", EUR="🇪🇺")
 
 expected_token = settings.expected_token
 security = HTTPBearer()
@@ -25,7 +20,7 @@ router = APIRouter(
 
 
 @router.post("/")
-async def send_to_group(body: SMassage):
+async def send_to_group(body: SMassage) -> None:
     try:
         # Формування повідомлення з використанням даних з об'єкта SMassage
         message = (
