@@ -24,9 +24,9 @@ async def send_to_group(body: SMassage) -> None:
     try:
         # Формування повідомлення з використанням даних з об'єкта SMassage
         message = (
-            f" {body.lo_address}\n"
-            f" {emoji_dict.get(body.movement)}\n"
-            f"Val: {emoji_dict.get(body.val)}\n"
+            f"{body.lo_address}\n"
+            f"{emoji_dict.get(body.movement)}\n"
+            f"Валюта: {emoji_dict.get(body.val)}\n"
             f"Сума валюти: {body.val_sum}\n"
             f"Сума гривні: {body.val_national_sum}\n"
             f"Курс: {body.course}\n"
