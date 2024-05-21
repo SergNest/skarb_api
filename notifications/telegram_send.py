@@ -7,7 +7,9 @@ from fastapi_cache.decorator import cache
 from bot import send_notification
 from notifications.schema import SMassage
 from conf.config import settings
+from aiogram import Bot
 
+BOT = Bot(token=settings.bot_token)
 emoji_dict = dict(buy="Куплено 🟢", sell="Продано 🔴", USD="🇺🇸", EUR="🇪🇺")
 
 expected_token = settings.expected_token
@@ -31,7 +33,7 @@ async def send_to_group(body: SMassage) -> None:
             f"Сума гривні: {body.val_national_sum}\n"
             f"Курс: {body.course}\n"
         )
-        await send_notification(body.chat_id, message)
+        await send_notification(body.chat_id, message, BOT)
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
     except httpx.RequestError:

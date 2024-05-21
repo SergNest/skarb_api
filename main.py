@@ -17,6 +17,7 @@ from src.schema import SType, SVendor
 from elombard.zok import router as zok
 from notifications.telegram_send import router as telegram_send
 
+
 app = FastAPI()
 app.include_router(zok)
 app.include_router(telegram_send)
