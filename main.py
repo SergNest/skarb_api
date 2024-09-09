@@ -11,16 +11,18 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
+
 from conf.config import settings
 from src.schema import SType, SVendor
 
 from elombard.zok import router as zok
 from notifications.telegram_send import router as telegram_send
-
+from work_with_foto.photo_route import router as photo
 
 app = FastAPI()
 app.include_router(zok)
 app.include_router(telegram_send)
+app.include_router(photo)
 
 security = HTTPBearer()
 

@@ -2,7 +2,6 @@ import httpx
 
 from fastapi import APIRouter, HTTPException
 from fastapi.security import HTTPBearer
-from fastapi_cache.decorator import cache
 
 from bot import send_notification
 from notifications.schema import SMassage
