@@ -1,9 +1,10 @@
-from PIL import Image
 import cv2
 import numpy as np
 from io import BytesIO
 import base64
-
+from PIL import Image
+import requests
+from fastapi import HTTPException
 
 # Функція для порівняння зображень на основі ORB
 def compare_images(img1, img2):
@@ -34,3 +35,15 @@ def decode_base64_image(image_base64: str):
     if img is None:
         raise ValueError("Error decoding image")
     return img
+
+
+def load_image_from_url(url: str) -> Image.Image:
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Перевіряємо статус відповіді
+        img = Image.open(BytesIO(response.content))
+        return img
+    except requests.RequestException as e:
+        raise HTTPException(status_code=400, detail=f"Failed to fetch image from URL: {url}. Error: {str(e)}")
+    except IOError as e:
+        raise HTTPException(status_code=400, detail=f"Failed to process image from URL: {url}. Error: {str(e)}")

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, HTTPException
-from photo import read_imagefile, compare_images, decode_base64_image
-from work_with_foto.schema import ImageData
-
+from photo import read_imagefile, compare_images, decode_base64_image, load_image_from_url
+from work_with_foto.schema import ImageData, ImageUrls
+from typing import List
 
 router = APIRouter(
     prefix='/photo',
@@ -12,7 +12,6 @@ router = APIRouter(
 @router.post("/unique_images_base64")
 async def filter_unique_images(files: list[ImageData]):
     try:
-        print(files)
         # Декодуємо зображення з base64 і зберігаємо їх разом з іменами
         images = [(file.filename, decode_base64_image(file.image_base64)) for file in files]
         unique_images = []
@@ -39,6 +38,22 @@ async def filter_unique_images(files: list[UploadFile]):
                 unique_images.append((filename, img))
 
         return len(unique_images)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+
+@router.post("/unique_images_from_urls")
+async def filter_unique_images_from_urls(data: ImageUrls):
+    try:
+        images = [(url, load_image_from_url(url)) for url in data.urls]
+        unique_images = []
+
+        for url, img in images:
+            if not any(compare_images(img, comp_img) for _, comp_img in unique_images):
+                unique_images.append((url, img))
+
+        return {"unique_count": len(unique_images), "unique_urls": [url for url, _ in unique_images]}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
