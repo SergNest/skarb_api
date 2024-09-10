@@ -12,6 +12,7 @@ router = APIRouter(
 @router.post("/unique_images_base64")
 async def filter_unique_images(files: list[ImageData]):
     try:
+        print(files)
         # Декодуємо зображення з base64 і зберігаємо їх разом з іменами
         images = [(file.filename, decode_base64_image(file.image_base64)) for file in files]
         unique_images = []

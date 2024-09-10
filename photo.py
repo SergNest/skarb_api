@@ -4,6 +4,7 @@ import numpy as np
 from io import BytesIO
 import base64
 
+
 # Функція для порівняння зображень на основі ORB
 def compare_images(img1, img2):
     orb = cv2.ORB_create()
