@@ -8,4 +8,4 @@ class ImageData(BaseModel):
 
 
 class ImageUrls(BaseModel):
-    urls: List[HttpUrl]  # Список URL з перевіркою, що це коректний формат URL
+    urls: List[HttpUrl]

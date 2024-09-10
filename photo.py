@@ -5,15 +5,26 @@ import base64
 from PIL import Image
 import requests
 from fastapi import HTTPException
+# import logging
+#
+# logging.basicConfig(level=logging.DEBUG)
+
 
 # Функція для порівняння зображень на основі ORB
 def compare_images(img1, img2):
     orb = cv2.ORB_create()
     keypoints1, descriptors1 = orb.detectAndCompute(img1, None)
     keypoints2, descriptors2 = orb.detectAndCompute(img2, None)
+
+    # Якщо для одного із зображень не вдалося знайти ключові точки або дескриптори
+    if descriptors1 is None or descriptors2 is None:
+        return False
+
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = bf.match(descriptors1, descriptors2)
+
     matches = sorted(matches, key=lambda x: x.distance)
+
     threshold = 220  # Порогова кількість ключових точок
     return len(matches) > threshold
 
@@ -37,13 +48,25 @@ def decode_base64_image(image_base64: str):
     return img
 
 
-def load_image_from_url(url: str) -> Image.Image:
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Перевіряємо статус відповіді
-        img = Image.open(BytesIO(response.content))
+def load_image_from_url(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        image = np.asarray(bytearray(response.content), dtype=np.uint8)
+        img = cv2.imdecode(image, cv2.IMREAD_COLOR)
+        if img is None:
+            pass
+            # logging.error(f"Image decoding failed for URL: {url}")
         return img
-    except requests.RequestException as e:
-        raise HTTPException(status_code=400, detail=f"Failed to fetch image from URL: {url}. Error: {str(e)}")
-    except IOError as e:
-        raise HTTPException(status_code=400, detail=f"Failed to process image from URL: {url}. Error: {str(e)}")
+    else:
+        raise ValueError(f"Failed to load image from URL: {url}")
+
+# def load_image_from_url(url: str) -> Image.Image:
+#     try:
+#         response = requests.get(url)
+#         response.raise_for_status()  # Перевіряємо статус відповіді
+#         img = Image.open(BytesIO(response.content))
+#         return img
+#     except requests.RequestException as e:
+#         raise HTTPException(status_code=400, detail=f"Failed to fetch image from URL: {url}. Error: {str(e)}")
+#     except IOError as e:
+#         raise HTTPException(status_code=400, detail=f"Failed to process image from URL: {url}. Error: {str(e)}")

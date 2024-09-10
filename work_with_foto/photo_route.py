@@ -47,6 +47,7 @@ async def filter_unique_images(files: list[UploadFile]):
 async def filter_unique_images_from_urls(data: ImageUrls):
     try:
         images = [(url, load_image_from_url(url)) for url in data.urls]
+        print(images)
         unique_images = []
 
         for url, img in images:
