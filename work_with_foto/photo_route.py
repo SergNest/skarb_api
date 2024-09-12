@@ -27,6 +27,22 @@ async def filter_unique_images(files: list[ImageData]):
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 
+@router.post("/unique_images_from_urls")
+async def filter_unique_images_from_urls(data: ImageUrls):
+    try:
+        images = [(url, load_image_from_url(url)) for url in data.urls]
+        unique_images = []
+
+        for url, img in images:
+            if not any(compare_images(img, comp_img) for _, comp_img in unique_images):
+                unique_images.append((url, img))
+
+        return {"unique_count": len(unique_images), "unique_urls": [url for url, _ in unique_images]}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+
 @router.post("/unique_images")
 async def filter_unique_images(files: list[UploadFile]):
     try:
@@ -43,18 +59,4 @@ async def filter_unique_images(files: list[UploadFile]):
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 
-@router.post("/unique_images_from_urls")
-async def filter_unique_images_from_urls(data: ImageUrls):
-    try:
-        images = [(url, load_image_from_url(url)) for url in data.urls]
-        print(images)
-        unique_images = []
 
-        for url, img in images:
-            if not any(compare_images(img, comp_img) for _, comp_img in unique_images):
-                unique_images.append((url, img))
-
-        return {"unique_count": len(unique_images), "unique_urls": [url for url, _ in unique_images]}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
