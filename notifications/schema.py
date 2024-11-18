@@ -11,4 +11,6 @@ class SMassage(BaseModel):
     val_sum: int = 50
     val_national_sum: float = 2007.5
     course: float = 40.15
-
+    # for another notification
+    usd_rate: Optional[str] = None
+    eur_rate: Optional[str] = None
