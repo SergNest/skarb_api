@@ -23,8 +23,11 @@ router = APIRouter(
 @router.post("/")
 async def send_to_group(body: SMassage) -> None:
     try:
-        if body.usd_rate and body.eur_rate:
-            message = f"{emoji_dict.get('USD')} {body.usd_rate}\n{emoji_dict.get('EUR')} {body.eur_rate}"
+
+        if body.usd_rate and body.eur_rate: # зміни
+            message = (f"{body.lo_address}\n"
+                       f"{emoji_dict.get('USD')} {body.usd_rate}\n"
+                       f"{emoji_dict.get('EUR')} {body.eur_rate}")
         else:
             message = (
                 f"{body.lo_address}\n"
@@ -34,7 +37,9 @@ async def send_to_group(body: SMassage) -> None:
                 f"Сума гривні: {body.val_national_sum}\n"
                 f"Курс: {body.course}\n"
             )
+
         await send_notification(body.chat_id, message, BOT)
+
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
     except httpx.RequestError:
