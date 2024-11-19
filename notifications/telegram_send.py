@@ -23,7 +23,6 @@ router = APIRouter(
 @router.post("/")
 async def send_to_group(body: SMassage) -> None:
     try:
-
         if body.usd_rate and body.eur_rate: # зміни
             message = (f"{body.lo_address}\n"
                        f"{emoji_dict.get('USD')} {body.usd_rate}\n"
