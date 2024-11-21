@@ -1,7 +1,9 @@
-from fastapi import APIRouter, UploadFile, HTTPException
+from fastapi import APIRouter, UploadFile, HTTPException, Depends
+
+from auth import authenticate
 from photo import read_imagefile, compare_images, decode_base64_image, load_image_from_url
 from work_with_foto.schema import ImageData, ImageUrls
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(
     prefix='/photo',
@@ -10,7 +12,7 @@ router = APIRouter(
 
 
 @router.post("/unique_images_base64")
-async def filter_unique_images(files: list[ImageData]):
+async def filter_unique_images(files: list[ImageData], user: Optional[str] = Depends(authenticate)):
     try:
         # Декодуємо зображення з base64 і зберігаємо їх разом з іменами
         images = [(file.filename, decode_base64_image(file.image_base64)) for file in files]
@@ -28,7 +30,7 @@ async def filter_unique_images(files: list[ImageData]):
 
 
 @router.post("/unique_images_from_urls")
-async def filter_unique_images_from_urls(data: ImageUrls):
+async def filter_unique_images_from_urls(data: ImageUrls, user: Optional[str] = Depends(authenticate)):
     try:
         images = [(url, load_image_from_url(url)) for url in data.urls]
         unique_images = []
@@ -44,7 +46,7 @@ async def filter_unique_images_from_urls(data: ImageUrls):
 
 
 @router.post("/unique_images")
-async def filter_unique_images(files: list[UploadFile]):
+async def filter_unique_images(files: list[UploadFile], user: Optional[str] = Depends(authenticate)):
     try:
         images = [(file.filename, read_imagefile(await file.read())) for file in files]
         unique_images = []
