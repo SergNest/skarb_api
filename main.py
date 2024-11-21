@@ -6,27 +6,24 @@ from redis import asyncio as aioredis
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, status, Header, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
-
+from auth import authenticate, expected_token
 from conf.config import settings
 from src.schema import SType, SVendor
 
 from elombard.zok import router as zok
 from notifications.telegram_send import router as telegram_send
 from work_with_foto.photo_route import router as photo
+from sun_flower.sunflower_route import router as sf
 
 app = FastAPI()
 app.include_router(zok)
 app.include_router(telegram_send)
 app.include_router(photo)
-
-security = HTTPBearer()
-
-expected_token = settings.expected_token
+app.include_router(sf)
 
 
 async def startup():
@@ -38,17 +35,6 @@ async def startup():
 @app.on_event("startup")
 async def startup_event():
     await startup()
-
-
-def authenticate(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    if token != expected_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return {"token": token}
 
 
 @app.get("/api/healthchecker")

@@ -2,35 +2,20 @@ import httpx
 
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Depends, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi_cache.decorator import cache
 
 from typing import Optional
 
-
+from auth import authenticate
 from elombard.schema import SZok
 from conf.config import settings
 
-
-expected_token = settings.expected_token
-security = HTTPBearer()
 
 router = APIRouter(
     prefix='/zok',
     tags=['Clients ZOK']
 )
-
-
-def authenticate(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    if token != expected_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return {"token": token}
 
 
 @router.get("/check_zok_by_phone", response_model=SZok)
