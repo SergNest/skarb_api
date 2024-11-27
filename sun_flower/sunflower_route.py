@@ -1,12 +1,10 @@
 import httpx
 
 from fastapi import APIRouter, HTTPException, Depends
-
-
 from auth import authenticate
 from conf.config import settings
 from typing import Optional, List
-
+from datetime import datetime
 
 from sun_flower.schema import DelayRequestItem, SuccessResponse, ErrorResponse
 
@@ -36,14 +34,30 @@ async def set_delay_from_external_api(
 
     async with httpx.AsyncClient() as client:
         try:
-            # Серіалізація списку даних
-            json_data = [item.dict() for item in data]
-            response = await client.post(central_base_api_url, json=json_data, headers=headers)
+            # Перетворення Timestamp у кожному елементі
+            converted_data = []
+            for item in data:
+                # Конвертація Timestamp до необхідного формату
+                timestamp = datetime.strptime(item.Timestamp, "%Y-%m-%d %H:%M:%S.%f")  # Розбір вхідного формату
+                formatted_timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")  # Форматування до потрібного
+
+                # Додати до списку змінені об'єкти
+                converted_item = item.dict()
+                converted_item["Timestamp"] = formatted_timestamp
+                converted_data.append(converted_item)
+
+            # Відправлення даних
+            response = await client.post(central_base_api_url, json=converted_data, headers=headers)
             response.raise_for_status()
 
             return SuccessResponse(
                 status="success",
                 data=response.json()
+            )
+        except ValueError as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid timestamp format: {e}"
             )
         except httpx.HTTPStatusError as e:
             raise HTTPException(
