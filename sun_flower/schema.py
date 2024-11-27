@@ -23,4 +23,3 @@ class SuccessResponse(BaseModel):
 class ErrorResponse(BaseModel):
     status: str = Field(..., description="Status of the request")
     error: str = Field(..., description="Error message")
-    str = Field(..., description="Error message")
