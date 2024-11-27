@@ -5,10 +5,10 @@ from fastapi import APIRouter, HTTPException, Depends
 
 from auth import authenticate
 from conf.config import settings
-from typing import Optional
+from typing import Optional, List
 
 
-from sun_flower.schema import DelayRequest, SuccessResponse, ErrorResponse
+from sun_flower.schema import DelayRequestItem, SuccessResponse, ErrorResponse
 
 router = APIRouter(
     prefix='/sf',
@@ -25,7 +25,7 @@ router = APIRouter(
     },
 )
 async def set_delay_from_external_api(
-    data: DelayRequest,
+    data: List[DelayRequestItem],  # Приймає список об'єктів
     user: Optional[str] = Depends(authenticate)
 ):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/sf/new_delay/"
@@ -36,7 +36,8 @@ async def set_delay_from_external_api(
 
     async with httpx.AsyncClient() as client:
         try:
-            json_data = [item.dict() for item in data.items]
+            # Серіалізація списку даних
+            json_data = [item.dict() for item in data]
             response = await client.post(central_base_api_url, json=json_data, headers=headers)
             response.raise_for_status()
 
