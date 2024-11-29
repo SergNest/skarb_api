@@ -5,9 +5,12 @@ from auth import authenticate
 from conf.config import settings
 from typing import Optional, List
 from datetime import datetime
+from loguru import logger
 
 from sun_flower.schema import DelayRequestItem, SuccessResponse, ErrorResponse
 
+logger.remove()
+logger.add("app.log", rotation="10 MB", retention="10 days", compression="zip")
 router = APIRouter(
     prefix='/sf',
     tags=['sun flower']
@@ -27,44 +30,49 @@ async def set_delay_from_external_api(
     user: Optional[str] = Depends(authenticate)
 ):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/sf/new_delay/"
+    headers = {"Content-Type": "application/json; charset=utf-8"}
 
-    headers = {
-        "Content-Type": "application/json; charset=utf-8"
-    }
+    logger.info("Received request with data: {data} from user: {user}", data=data, user=user)
 
     async with httpx.AsyncClient() as client:
         try:
             # Перетворення Timestamp у кожному елементі
             converted_data = []
             for item in data:
-                # Конвертація Timestamp до необхідного формату
                 timestamp = datetime.strptime(item.Timestamp, "%Y-%m-%d %H:%M:%S.%f")  # Розбір вхідного формату
                 formatted_timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")  # Форматування до потрібного
 
-                # Додати до списку змінені об'єкти
                 converted_item = item.dict()
                 converted_item["Timestamp"] = formatted_timestamp
                 converted_data.append(converted_item)
 
+            logger.info("Converted data: {converted_data}", converted_data=converted_data)
+
             # Відправлення даних
             response = await client.post(central_base_api_url, json=converted_data, headers=headers)
             response.raise_for_status()
+
+            logger.info("External API responded with: {response}", response=response.json())
 
             return SuccessResponse(
                 status="success",
                 data=response.json()
             )
         except ValueError as e:
+            logger.error("Invalid timestamp format: {error}", error=str(e))
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid timestamp format: {e}"
             )
         except httpx.HTTPStatusError as e:
+            logger.error("External API returned error: {status_code} - {error}",
+                         status_code=e.response.status_code, error=str(e))
             raise HTTPException(
                 status_code=e.response.status_code,
                 detail="External API returned error"
             )
-        except httpx.RequestError:
+        except httpx.RequestError as e:
+            logger.error("Error connecting to external API: {error}", error=str(e))
             raise HTTPException(
                 status_code=500,
                 detail="Error connecting to external API"
