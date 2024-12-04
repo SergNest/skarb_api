@@ -1,5 +1,6 @@
 from loguru import logger
 
+logger.remove()
 # Загальний лог-файл для всіх маршрутів
 logger.add("logs/general.log", rotation="10 MB", retention="10 days", compression="zip")
 
