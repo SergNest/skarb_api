@@ -229,40 +229,20 @@ async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(a
 @app.post("/new_vendor")
 async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(authenticate)):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/model/new_vendor/"
-    headers = {"Content-Type": "application/json; charset=utf-8"}
 
-    logger.bind(new_vendor=True).info(
-        "Received request for /new_vendor with data: {data} by user: {user}",
-        data=data,
-        user=user,
-    )
+    headers = {
+        "Content-Type": "application/json; charset=utf-8"  # Вказуємо, що дані передаються у форматі JSON
+    }
 
     async with httpx.AsyncClient() as client:
         try:
             json_data = json.dumps(data)
-            logger.bind(new_vendor=True).debug("Sending data to external API: {json_data}", json_data=json_data)
-
             response = await client.post(central_base_api_url, data=json_data, headers=headers)
             response.raise_for_status()
-
-            logger.bind(new_vendor=True).info(
-                "Successful response from external API for /new_vendor with data: {response_data}",
-                response_data=response.json(),
-            )
-
             return response.json()
         except httpx.HTTPStatusError as e:
-            logger.bind(new_vendor=True).error(
-                "External API error for /new_vendor. Status: {status_code}, Error: {error}",
-                status_code=e.response.status_code,
-                error=str(e),
-            )
             raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
-        except httpx.RequestError as e:
-            logger.bind(new_vendor=True).error(
-                "Request error while connecting to external API for /new_vendor. Error: {error}",
-                error=str(e),
-            )
+        except httpx.RequestError:
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
 
