@@ -132,6 +132,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+skarb_venv/
+skarbenv/
 
 # Spyder project settings
 .spyderproject
@@ -170,8 +172,9 @@ poetry.toml
 
 # ruff
 .ruff_cache/
-skarb_venv/
+
 # LSP config files
 pyrightconfig.json
 
+logs/
 # End of https://www.toptal.com/developers/gitignore/api/python

@@ -6,12 +6,10 @@ from conf.config import settings
 from typing import Optional, List
 from datetime import datetime
 from utils.logger_config import logger
-# from loguru import logger
+
 
 from sun_flower.schema import DelayRequestItem, SuccessResponse, ErrorResponse
 
-# logger.remove()
-# logger.add("app.log", rotation="10 MB", retention="10 days", compression="zip")
 
 router = APIRouter(
     prefix='/sf',

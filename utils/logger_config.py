@@ -21,3 +21,5 @@ logger.add("logs/new_vendor.json", serialize=True, filter=lambda record: "new_ve
            rotation="5 MB", retention="7 days")
 logger.add("logs/check_zok_by_phone.json", serialize=True,
            filter=lambda record: "check_zok_by_phone" in record["extra"], rotation="5 MB", retention="7 days")
+logger.add("logs/new_offer.json", serialize=True,
+           filter=lambda record: "new_offer" in record["extra"], rotation="5 MB", retention="7 days")

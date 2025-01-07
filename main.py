@@ -16,6 +16,7 @@ from conf.config import settings
 from src.schema import SType, SVendor
 
 from elombard.zok import router as zok
+from elombard.new_offer import router as offer
 from notifications.telegram_send import router as telegram_send
 from work_with_foto.photo_route import router as photo
 from sun_flower.sunflower_route import router as sf
@@ -42,6 +43,7 @@ app.include_router(zok)
 app.include_router(telegram_send)
 app.include_router(photo)
 app.include_router(sf)
+app.include_router(offer)
 
 
 async def startup():

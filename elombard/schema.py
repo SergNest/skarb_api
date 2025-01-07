@@ -1,7 +1,7 @@
-from datetime import date, datetime
+from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SZok(BaseModel):
@@ -9,3 +9,19 @@ class SZok(BaseModel):
     TextError: str
     InZok: bool | None = None
     ZokDate: Optional[datetime] = None
+
+
+class OfferRequest(BaseModel):
+    phone: str = Field(..., description="Phone number of the client")
+    offer: Optional[str] = Field(None, description="Optional offer details")
+
+
+class OfferSuccessResponse(BaseModel):
+    status: str = Field(..., description="Status of the request")
+    data: Optional[dict] = Field(None, description="Additional data for the response")
+
+
+class OfferErrorResponse(BaseModel):
+    status: str = Field(..., description="Status of the request")
+    error: str = Field(..., description="Error message")
+
