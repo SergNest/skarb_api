@@ -12,7 +12,7 @@ class SZok(BaseModel):
 
 
 class OfferRequest(BaseModel):
-    phone: str = Field(..., description="Phone number of the client")
+    phone: str = Field(..., description="Phone number of the client +380932223344")
     offer: Optional[str] = Field(None, description="Optional offer details")
 
 
@@ -24,4 +24,13 @@ class OfferSuccessResponse(BaseModel):
 class OfferErrorResponse(BaseModel):
     status: str = Field(..., description="Status of the request")
     error: str = Field(..., description="Error message")
+
+
+class SBonusWithdraw(BaseModel):
+    Iid: str
+    Lo: str
+    Org: str
+    last_zok_org: str
+    Phone: str
+    Error: str
 
