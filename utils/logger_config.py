@@ -8,15 +8,15 @@ import json
 
 logger.remove()
 
-# Лог-функція для відправки в Loki через POST запит
-def send_to_loki(record):
-    loki_url = "http://192.168.11.5/loki/api/v1/push"
-    headers = {"Content-Type": "application/json"}
+loki_url = "http://localhost:3100/loki/api/v1/push"
+headers = {
+    "Content-Type": "application/json"
+}
 
-    # Перевіряємо, чи рівень є об'єктом з атрибутом .name або рядком
-    level_name = record["level"]
-    if hasattr(level_name, 'name'):
-        level_name = level_name.name  # Якщо це об'єкт, використовуємо властивість .name
+# Лог-функція для відправки в Loki через POST запит
+def send_to_loki(message):
+    record = json.loads(message)
+    level_name = record["level"]["name"]
 
     log_data = {
         "streams": [
