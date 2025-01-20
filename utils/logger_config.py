@@ -12,12 +12,11 @@ logger.remove()
 def send_to_loki(record):
     loki_url = "http://192.168.11.5/loki/api/v1/push"
     headers = {"Content-Type": "application/json"}
-    
-    # Перевіряємо, чи рівень - це об'єкт, що має властивість .name, або рядок
-    if isinstance(record["level"], str):
-        level_name = record["level"]  # Якщо це рядок, просто використовуємо його
-    else:
-        level_name = record["level"].name if hasattr(record["level"], 'name') else str(record["level"])
+
+    # Перевіряємо, чи рівень є об'єктом з атрибутом .name або рядком
+    level_name = record["level"]
+    if hasattr(level_name, 'name'):
+        level_name = level_name.name  # Якщо це об'єкт, використовуємо властивість .name
 
     log_data = {
         "streams": [
@@ -35,7 +34,6 @@ def send_to_loki(record):
     
     response = requests.post(loki_url, headers=headers, data=json.dumps(log_data))
     return response.status_code
-
 
 # Загальний лог-файл для відправки в Loki
 logger.add(send_to_loki, level="INFO")
