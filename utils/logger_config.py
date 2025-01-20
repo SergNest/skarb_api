@@ -10,13 +10,13 @@ logger.remove()
 
 # Лог-функція для відправки в Loki через POST запит
 def send_to_loki(record):
-    loki_url = "http://<Loki-Server-URL>/loki/api/v1/push"
+    loki_url = "http://192.168.11.5/loki/api/v1/push"
     headers = {"Content-Type": "application/json"}
     
     log_data = {
         "streams": [
             {
-                "stream": {"job": "my_app", "level": record["level"].name},
+                "stream": {"job": "skarbapi", "level": record["level"].name},
                 "values": [
                     [
                         str(int(record["time"].timestamp() * 1000000000)),
