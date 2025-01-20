@@ -13,10 +13,13 @@ def send_to_loki(record):
     loki_url = "http://192.168.11.5/loki/api/v1/push"
     headers = {"Content-Type": "application/json"}
     
+    # Перевірка, чи є "level" об'єктом (наприклад, рівень у вигляді класу Loguru), чи рядком
+    level_name = record["level"].name if isinstance(record["level"], object) else record["level"]
+
     log_data = {
         "streams": [
             {
-                "stream": {"job": "skarbapi", "level": record["level"].name},
+                "stream": {"job": "skarbapi", "level": level_name},
                 "values": [
                     [
                         str(int(record["time"].timestamp() * 1000000000)),
