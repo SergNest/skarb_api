@@ -23,7 +23,7 @@ from sun_flower.sunflower_route import router as sf
 from utils.logger_config import logger
 
 
-BLOCKED_PATHS = ["/.env", "/.git", "/.config", "/config.json"]
+BLOCKED_PATHS = ["/.env", "/.git", "/.config", "/config.json", "/sslvpn_logon.shtml"]
 
 app = FastAPI()
 
