@@ -14,9 +14,8 @@ headers = {
 }
 
 # Лог-функція для відправки в Loki через POST запит
-def send_to_loki(message):
-    record = json.loads(message)
-    level_name = record["level"]["name"]
+def send_to_loki(record):
+    level_name = record["level"].name
 
     log_data = {
         "streams": [
