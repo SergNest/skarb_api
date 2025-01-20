@@ -13,7 +13,7 @@ def send_to_loki(record):
     loki_url = "http://192.168.11.5/loki/api/v1/push"
     headers = {"Content-Type": "application/json"}
     
-    # Перевірка, чи є "level" об'єктом (наприклад, рівень у вигляді класу Loguru), чи рядком
+    # Перевірка типу: якщо це об'єкт, беремо .name, якщо рядок — використовуємо без змін
     level_name = record["level"].name if isinstance(record["level"], object) else record["level"]
 
     log_data = {
