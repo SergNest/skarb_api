@@ -2,6 +2,7 @@ from loguru import logger
 import os
 import requests
 import json
+import datetime
 
 # log_dir = "/var/log/fastapi"
 # os.makedirs(log_dir, exist_ok=True)
@@ -14,23 +15,42 @@ headers = {
 }
 
 # Лог-функція для відправки в Loki через POST запит
-def send_to_loki(record):
-    level_name = record["level"].name
+def send_to_loki(message):
+    try:
+        record = json.loads(message)
+    except json.JSONDecodeError:
+        record = message
 
-    log_data = {
-        "streams": [
-            {
-                "stream": {"job": "skarbapi", "level": level_name},
-                "values": [
-                    [
-                        str(int(record["time"].timestamp() * 1000000000)),
-                        record["message"]
+    if isinstance(record, dict):
+        level_name = record["level"]["name"]
+        log_data = {
+            "streams": [
+                {
+                    "stream": {"job": "skarbapi", "level": level_name},
+                    "values": [
+                        [
+                            str(int(record["time"].timestamp() * 1000000000)),
+                            record["message"]
+                        ]
                     ]
-                ]
-            }
-        ]
-    }
-    
+                }
+            ]
+        }
+    else:
+        log_data = {
+            "streams": [
+                {
+                    "stream": {"job": "skarbapi", "level": "INFO"},
+                    "values": [
+                        [
+                            str(int(datetime.datetime.now().timestamp() * 1000000000)),
+                            record
+                        ]
+                    ]
+                }
+            ]
+        }
+
     response = requests.post(loki_url, headers=headers, data=json.dumps(log_data))
     return response.status_code
 
