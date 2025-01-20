@@ -9,7 +9,7 @@ import datetime
 
 logger.remove()
 
-loki_url = "http://localhost:3100/loki/api/v1/push"
+loki_url = "http://192.168.11.5:3100/loki/api/v1/push"
 headers = {
     "Content-Type": "application/json"
 }
