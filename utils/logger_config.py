@@ -14,6 +14,12 @@ headers = {
     "Content-Type": "application/json"
 }
 
+
+def log_blocked_ip(ip_address):
+    with open("blocked_ips.txt", "a") as f:  # Додаток для запису в файл
+        f.write(f"{ip_address} - {datetime.datetime.now()}\n")
+
+
 # Лог-функція для відправки в Loki через POST запит
 def send_to_loki(message):
     try:
@@ -51,8 +57,14 @@ def send_to_loki(message):
             ]
         }
 
+    # Якщо IP-адреса заблокована, записуємо в файл
+    if "Blocked access" in record.get("message", ""):
+        ip_address = record['extra']['ip']  # Зберігайте IP-адресу з запису логів
+        log_blocked_ip(ip_address)
+
     response = requests.post(loki_url, headers=headers, data=json.dumps(log_data))
     return response.status_code
+
 
 # Загальний лог-файл для відправки в Loki
 logger.add(send_to_loki, level="INFO")
