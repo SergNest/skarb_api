@@ -1,3 +1,6 @@
+import datetime
+
+import aiofiles
 import uvicorn
 import httpx
 import json
@@ -28,10 +31,19 @@ BLOCKED_PATHS = ["/.env", "/.git", "/.config", "/config.json", "/sslvpn_logon.sh
 app = FastAPI()
 
 
+async def log_blocked_ip(ip_address):
+    async with aiofiles.open("blocked_ips.txt", "a") as f:
+        await f.write(f"{ip_address} - {datetime.datetime.now()}\n")
+
+
 @app.middleware("http")
 async def block_paths_middleware(request: Request, call_next):
     if request.url.path in BLOCKED_PATHS:
         logger.warning(f"Blocked access to {request.url.path} from {request.client.host}")
+
+        # Запис IP-адреси у файл
+        await log_blocked_ip(request.client.host)
+
         return JSONResponse(
             status_code=403,
             content={"detail": "Forbidden path"}

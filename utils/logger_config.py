@@ -1,6 +1,4 @@
-import aiofiles
 from loguru import logger
-import os
 import requests
 import json
 import datetime
@@ -16,11 +14,6 @@ headers = {
 }
 
 
-async def log_blocked_ip(ip_address):
-    async with aiofiles.open("blocked_ips.txt", "a") as f:
-        await f.write(f"{ip_address} - {datetime.datetime.now()}\n")
-
-
 async def send_to_loki(message):
     try:
         record = json.loads(message)
@@ -29,11 +22,6 @@ async def send_to_loki(message):
 
     if isinstance(record, dict):
         level_name = record["level"]["name"]
-
-        # Логіка для блокування IP
-        if "Blocked access" in record.get("message", "") and 'ip' in record.get('extra', {}):
-            ip_address = record['extra']['ip']  # Зберігаємо IP-адресу з записи логів
-            await log_blocked_ip(ip_address)  # Асинхронний виклик
 
         log_data = {
             "streams": [
