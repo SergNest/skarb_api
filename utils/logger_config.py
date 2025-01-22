@@ -15,29 +15,19 @@ headers = {
 }
 
 
-def log_blocked_ip(ip_address):
-    with open("blocked_ips.txt", "a") as f:  # Додаток для запису в файл
-        f.write(f"{ip_address} - {datetime.datetime.now()}\n")
-
-
 # Лог-функція для відправки в Loki через POST запит
 def send_to_loki(message):
     try:
-        # Отримуємо дані з об'єкта message
-        record = message.__dict__  # Перетворюємо Message в словник
+        record = json.loads(message)
+    except json.JSONDecodeError:
+        record = message
 
-        if "Blocked access" in record["message"]:
-            ip_address = record["extra"].get("ip")  # Додаємо IP адреса, якщо існує
-            log_blocked_ip(ip_address)  # Ваша функція для запису IP
-    except Exception as e:
-        logger.warning(f"Error processing log record: {e}")
-
-    # Ваш існуючий код для відправки в Loki
-    try:
+    if isinstance(record, dict):
+        level_name = record["level"]["name"]
         log_data = {
             "streams": [
                 {
-                    "stream": {"job": "skarbapi", "level": record["level"]["name"]},
+                    "stream": {"job": "skarbapi", "level": level_name},
                     "values": [
                         [
                             str(int(record["time"].timestamp() * 1000000000)),
@@ -47,11 +37,23 @@ def send_to_loki(message):
                 }
             ]
         }
+    else:
+        log_data = {
+            "streams": [
+                {
+                    "stream": {"job": "skarbapi", "level": "INFO"},
+                    "values": [
+                        [
+                            str(int(datetime.datetime.now().timestamp() * 1000000000)),
+                            record
+                        ]
+                    ]
+                }
+            ]
+        }
 
-        response = requests.post(loki_url, headers=headers, data=json.dumps(log_data))
-        return response.status_code
-    except Exception as e:
-        logger.error(f"Failed to send log to Loki: {e}")
+    response = requests.post(loki_url, headers=headers, data=json.dumps(log_data))
+    return response.status_code
 
 
 # Загальний лог-файл для відправки в Loki
