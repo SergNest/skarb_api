@@ -1,3 +1,4 @@
+import aiofiles
 from loguru import logger
 import os
 import requests
@@ -15,8 +16,12 @@ headers = {
 }
 
 
-# Лог-функція для відправки в Loki через POST запит
-def send_to_loki(message):
+async def log_blocked_ip(ip_address):
+    async with aiofiles.open("blocked_ips.txt", "a") as f:
+        await f.write(f"{ip_address} - {datetime.datetime.now()}\n")
+
+
+async def send_to_loki(message):
     try:
         record = json.loads(message)
     except json.JSONDecodeError:
@@ -24,6 +29,12 @@ def send_to_loki(message):
 
     if isinstance(record, dict):
         level_name = record["level"]["name"]
+
+        # Логіка для блокування IP
+        if "Blocked access" in record.get("message", "") and 'ip' in record.get('extra', {}):
+            ip_address = record['extra']['ip']  # Зберігаємо IP-адресу з записи логів
+            await log_blocked_ip(ip_address)  # Асинхронний виклик
+
         log_data = {
             "streams": [
                 {
@@ -52,6 +63,7 @@ def send_to_loki(message):
             ]
         }
 
+    # Виконання POST запиту до Loki
     response = requests.post(loki_url, headers=headers, data=json.dumps(log_data))
     return response.status_code
 
