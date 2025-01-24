@@ -12,7 +12,8 @@ class SZok(BaseModel):
 
 
 class OfferRequest(BaseModel):
-    phone: str = Field(..., description="Phone number of the client +380932223344")
+    phone: str = Field(..., description="Phone number of the client 380932223344")
+    segment: int = Field(..., description="Segment feature")
     offer: Optional[str] = Field(None, description="Optional offer details")
 
 
