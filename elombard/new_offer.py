@@ -36,7 +36,7 @@ async def create_new_offer(
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(central_base_api_url, json=request_data.dict(), headers=headers)
+            response = await client.post(central_base_api_url, json=request_data.dict(), headers=headers, timeout=20)
             response.raise_for_status()
 
             logger.bind(new_offer=True).info(
