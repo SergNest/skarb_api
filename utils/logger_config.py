@@ -26,10 +26,10 @@ async def send_to_loki(message):
     job_name = record.get("extra", {}).get("job", "skarbapi")
     log_message = record.get("message", "")
 
-    print("--- DEBUG record ---")
-    print(f"Job: {job_name}")
-    print(f"Message: {log_message}")
-    print("--------------------")
+    # print("--- DEBUG record ---")
+    # print(f"Job: {job_name}")
+    # print(f"Message: {log_message}")
+    # print("--------------------")
 
     log_data = {
         "streams": [
@@ -53,7 +53,3 @@ logger.remove()
 
 # Додаємо єдиний обробник, який перетворює все на JSON
 logger.add(send_to_loki, level="INFO", serialize=True)
-
-
-# Відлагоджувальний тест
-logger.bind(job="test_bind").info("Test log with job field")
