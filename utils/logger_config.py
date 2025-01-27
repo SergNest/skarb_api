@@ -24,6 +24,10 @@ async def send_to_loki(message):
         # Витягуємо job із record["extra"] якщо він там є, інакше ставимо "skarbapi"
         job_name = record.get("extra", {}).get("job", "skarbapi")
         log_message = record.get("message", "")
+        
+        print("--- DEBUG record ---")
+        print(record)
+        print("--------------------")
     else:
         # Якщо структура не відповідає формату, логуватимемо з типом INFO і поточним часом
         level_name = "INFO"
@@ -31,10 +35,7 @@ async def send_to_loki(message):
         job_name = "skarbapi"
         log_message = str(record)
     
-    print("--- DEBUG record ---")
-    print(record)
-    print("--------------------")
-
+    
     # Формуємо JSON для Loki
     log_data = {
         "streams": [
