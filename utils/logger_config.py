@@ -8,26 +8,27 @@ headers = {"Content-Type": "application/json"}
 
 async def send_to_loki(message):
     try:
-        record = json.loads(message)  # Тепер "message" буде JSON
+        record = json.loads(message)  # Loguru тепер видає JSON
     except json.JSONDecodeError:
-        record = message
+        record = message  # Якщо JSON не парситься, використовуємо як текст
 
+    # Переконуємося, що Loguru передав `record`
+    if isinstance(record, dict) and "record" in record:
+        record = record["record"]  # Тепер у нас є `level`, `time`, `extra`
+    
+    # Витягуємо рівень логування
+    level_name = record.get("level", {}).get("name", "INFO")
+    timestamp_str = str(int(record.get("time", {}).get("timestamp", time.time()) * 1e9))
 
-    if isinstance(record, dict) and "level" in record and "time" in record:
-        level_name = record["level"]["name"]
-        timestamp_str = str(int(record["time"].timestamp() * 1e9))
-        job_name = record.get("extra", {}).get("job", "skarbapi")
-        log_message = record.get("message", "")
-    else:
-        level_name = "INFO"
-        timestamp_str = str(int(datetime.datetime.now().timestamp() * 1e9))
-        job_name = "skarbapi"
-        log_message = str(record)
+    # Витягуємо job або використовуємо дефолтне значення
+    job_name = record.get("extra", {}).get("job", "skarbapi")
+    log_message = record.get("message", "")
 
     print("--- DEBUG record ---")
-    print(job_name)
+    print(f"Job: {job_name}")
+    print(f"Message: {log_message}")
     print("--------------------")
-    
+
     log_data = {
         "streams": [
             {
@@ -50,7 +51,7 @@ logger.remove()
 
 # Додаємо єдиний обробник, який перетворює все на JSON
 logger.add(send_to_loki, level="INFO", serialize=True)
-print("=== LOGGER HANDLERS ===", logger._core.handlers)
-logger.warning("Logger config is loaded with serialize=True!")
 
-logger.info("Test log from logger_config.py")
+
+# Відлагоджувальний тест
+logger.bind(job="test_bind").info("Test log with job field")

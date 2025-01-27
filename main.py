@@ -23,8 +23,8 @@ from elombard.new_offer import router as offer
 from notifications.telegram_send import router as telegram_send
 from work_with_foto.photo_route import router as photo
 from sun_flower.sunflower_route import router as sf
-# from utils.logger_config import logger
-from loguru import logger
+from utils.logger_config import logger
+
 
 BLOCKED_PATHS = ["/.env", "/.git", "/.config", "/config.json", "/sslvpn_logon.shtml"]
 
