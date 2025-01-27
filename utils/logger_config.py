@@ -3,9 +3,6 @@ import requests
 import json
 import datetime
 
-# log_dir = "/var/log/fastapi"
-# os.makedirs(log_dir, exist_ok=True)
-
 logger.remove()
 
 loki_url = "http://192.168.11.5:3100/loki/api/v1/push"
@@ -13,8 +10,7 @@ headers = {
     "Content-Type": "application/json"
 }
 
-
-async def send_to_loki(message, job_name="skarbapi"):
+async def send_to_loki(message):
     try:
         record = json.loads(message)
     except json.JSONDecodeError:
@@ -26,7 +22,7 @@ async def send_to_loki(message, job_name="skarbapi"):
         log_data = {
             "streams": [
                 {
-                    "stream": {"job": job_name, "level": level_name},
+                    "stream": {"job": record["extra"].get("job", "skarbapi"), "level": level_name},
                     "values": [
                         [
                             str(int(record["time"].timestamp() * 1000000000)),
@@ -40,7 +36,7 @@ async def send_to_loki(message, job_name="skarbapi"):
         log_data = {
             "streams": [
                 {
-                    "stream": {"job": job_name, "level": "INFO"},
+                    "stream": {"job": "skarbapi", "level": "INFO"},
                     "values": [
                         [
                             str(int(datetime.datetime.now().timestamp() * 1000000000)),
@@ -55,21 +51,19 @@ async def send_to_loki(message, job_name="skarbapi"):
     response = requests.post(loki_url, headers=headers, data=json.dumps(log_data))
     return response.status_code
 
-
-# # Загальний лог-файл для відправки в Loki
-# logger.add(send_to_loki, level="INFO")
+# Загальний лог-файл для відправки в Loki
+logger.add(send_to_loki, level="INFO")
 
 # Логи для окремих маршрутів, також відправляються в Loki
-logger.add(send_to_loki, level="INFO", filter=lambda record: "check_zok_by_phone" in record["extra"], job_name="check_zok_by_phone")
-logger.add(send_to_loki, level="INFO", filter=lambda record: "new_offer" in record["extra"], job_name="new_offer")
-logger.add(send_to_loki, level="INFO", filter=lambda record: "new_delay" in record["extra"], job_name="new_delay")
-logger.add(send_to_loki, level="INFO", filter=lambda record: "get_vendor" in record["extra"], job_name="get_vendor")
-logger.add(send_to_loki, level="INFO", filter=lambda record: "new_type" in record["extra"], job_name="new_type")
-logger.add(send_to_loki, level="INFO", filter=lambda record: "dogovorhistory" in record["extra"], job_name="dogovorhistory")
-logger.add(send_to_loki, level="INFO", filter=lambda record: "gettype" in record["extra"], job_name="gettype")
-logger.add(send_to_loki, level="INFO", filter=lambda record: "new_vendor" in record["extra"], job_name="new_vendor")
-logger.add(send_to_loki, level="INFO", filter=lambda record: "get_bonus_withdraw" in record["extra"], job_name="get_bonus_withdraw")
-
+logger.add(send_to_loki, level="INFO", filter=lambda record: "check_zok_by_phone" in record["extra"], extra={"job": "check_zok_by_phone"})
+logger.add(send_to_loki, level="INFO", filter=lambda record: "new_offer" in record["extra"], extra={"job": "new_offer"})
+logger.add(send_to_loki, level="INFO", filter=lambda record: "new_delay" in record["extra"], extra={"job": "new_delay"})
+logger.add(send_to_loki, level="INFO", filter=lambda record: "get_vendor" in record["extra"], extra={"job": "get_vendor"})
+logger.add(send_to_loki, level="INFO", filter=lambda record: "new_type" in record["extra"], extra={"job": "new_type"})
+logger.add(send_to_loki, level="INFO", filter=lambda record: "dogovorhistory" in record["extra"], extra={"job": "dogovorhistory"})
+logger.add(send_to_loki, level="INFO", filter=lambda record: "gettype" in record["extra"], extra={"job": "gettype"})
+logger.add(send_to_loki, level="INFO", filter=lambda record: "new_vendor" in record["extra"], extra={"job": "new_vendor"})
+logger.add(send_to_loki, level="INFO", filter=lambda record: "get_bonus_withdraw" in record["extra"], extra={"job": "get_bonus_withdraw"})
 
 # from loguru import logger
 # import os
