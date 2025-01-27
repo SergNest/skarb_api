@@ -51,3 +51,7 @@ logger.remove()
 
 # Додаємо єдиний обробник, який перетворює все на JSON
 logger.add(send_to_loki, level="INFO", serialize=True)
+print("=== LOGGER HANDLERS ===", logger._core.handlers)
+logger.warning("Logger config is loaded with serialize=True!")
+
+logger.info("Test log from logger_config.py")
