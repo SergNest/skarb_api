@@ -19,7 +19,8 @@ async def send_to_loki(message):
     
     # Витягуємо рівень логування
     level_name = record.get("level", {}).get("name", "INFO")
-    timestamp_str = str(int(record["time"].timestamp() * 1e9))
+    timestamp_str = str(int(record["time"]["timestamp"] * 1e9))
+
 
     # Витягуємо job або використовуємо дефолтне значення
     job_name = record.get("extra", {}).get("job", "skarbapi")
