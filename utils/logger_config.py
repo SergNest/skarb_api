@@ -12,9 +12,6 @@ async def send_to_loki(message):
     except json.JSONDecodeError:
         record = message
 
-    print("--- DEBUG record ---")
-    print(record)
-    print("--------------------")
 
     if isinstance(record, dict) and "level" in record and "time" in record:
         level_name = record["level"]["name"]
@@ -27,6 +24,11 @@ async def send_to_loki(message):
         job_name = "skarbapi"
         log_message = str(record)
 
+    print("--- DEBUG record ---")
+    print(record)
+    print(job_name)
+    print("--------------------")
+    
     log_data = {
         "streams": [
             {
