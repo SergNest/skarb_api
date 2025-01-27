@@ -89,10 +89,10 @@ async def get_data_from_external_api(client_id: str, authorization: str = Header
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/history/dogovorhistory/{client_id}"
 
     logger.bind(job="dogovorhistory").info("Received request for client_id: {client_id} with token: {authorization}",
-                                          client_id=client_id, authorization=authorization, serialize=True)
+                                          client_id=client_id, authorization=authorization)
 
     if authorization != f"Bearer {expected_token}":
-        logger.bind(job="dogovorhistory").warning("Unauthorized access attempt with token: {authorization}", authorization=authorization, serialize=True)
+        logger.bind(job="dogovorhistory").warning("Unauthorized access attempt with token: {authorization}", authorization=authorization)
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     async with httpx.AsyncClient() as client:
@@ -101,16 +101,16 @@ async def get_data_from_external_api(client_id: str, authorization: str = Header
             response.raise_for_status()
 
             logger.bind(job="dogovorhistory").info("Successful response for client_id: {client_id} with data: {data}",
-                                                  client_id=client_id, data=response.json(), serialize=True)
+                                                  client_id=client_id, data=response.json())
 
             return response.json()
         except httpx.HTTPStatusError as e:
             logger.bind(job="dogovorhistory").error("External API error for client_id: {client_id}. Status: {status_code}, Error: {error}",
-                                                   client_id=client_id, status_code=e.response.status_code, error=str(e), serialize=True)
+                                                   client_id=client_id, status_code=e.response.status_code, error=str(e))
             raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
         except httpx.RequestError as e:
             logger.bind(job="dogovorhistory").error("Request error for client_id: {client_id}. Error: {error}",
-                                                   client_id=client_id, error=str(e), serialize=True)
+                                                   client_id=client_id, error=str(e))
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
 
@@ -125,7 +125,6 @@ async def get_type_from_external_api(search: str, category_id: int, user: Option
         search=search,
         category_id=category_id,
         user=user,
-        serialize=True
     )
 
     async with httpx.AsyncClient() as client:
@@ -138,7 +137,6 @@ async def get_type_from_external_api(search: str, category_id: int, user: Option
                 search=search,
                 category_id=category_id,
                 data=response.json(),
-                serialize=True
             )
 
             return response.json()
@@ -149,7 +147,6 @@ async def get_type_from_external_api(search: str, category_id: int, user: Option
                 category_id=category_id,
                 status_code=e.response.status_code,
                 error=str(e),
-                serialize=True
             )
             raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
         except httpx.RequestError as e:
@@ -158,7 +155,6 @@ async def get_type_from_external_api(search: str, category_id: int, user: Option
                 search=search,
                 category_id=category_id,
                 error=str(e),
-                serialize=True
             )
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
@@ -173,7 +169,6 @@ async def get_vendor_from_external_api(search: str, user: Optional[str] = Depend
         "Received request for search: {search} by user: {user}",
         search=search,
         user=user,
-        serialize=True
     )
 
     async with httpx.AsyncClient() as client:
@@ -185,7 +180,6 @@ async def get_vendor_from_external_api(search: str, user: Optional[str] = Depend
                 "Successful response for search: {search} with data: {data}",
                 search=search,
                 data=response.json(),
-                serialize=True
             )
 
             return response.json()
@@ -195,7 +189,6 @@ async def get_vendor_from_external_api(search: str, user: Optional[str] = Depend
                 search=search,
                 status_code=e.response.status_code,
                 error=str(e),
-                serialize=True
             )
             raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
         except httpx.RequestError as e:
@@ -203,7 +196,6 @@ async def get_vendor_from_external_api(search: str, user: Optional[str] = Depend
                 "Request error for search: {search}. Error: {error}",
                 search=search,
                 error=str(e),
-                serialize=True
             )
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
@@ -217,13 +209,12 @@ async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(a
         "Received request with data: {data} by user: {user}",
         data=data,
         user=user,
-        serialize=True
     )
 
     async with httpx.AsyncClient() as client:
         try:
             json_data = json.dumps(data)
-            logger.bind(job="new_type").debug("Sending data to external API: {json_data}", json_data=json_data, serialize=True)
+            logger.bind(job="new_type").debug("Sending data to external API: {json_data}", json_data=json_data)
 
             response = await client.post(central_base_api_url, data=json_data, headers=headers)
             response.raise_for_status()
@@ -231,7 +222,6 @@ async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(a
             logger.bind(job="new_type").info(
                 "Successful response from external API with data: {response_data}",
                 response_data=response.json(),
-                serialize=True
             )
 
             return response.json()
@@ -240,14 +230,12 @@ async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(a
                 "External API error. Status: {status_code}, Error: {error}",
                 status_code=e.response.status_code,
                 error=str(e),
-                serialize=True
             )
             raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
         except httpx.RequestError as e:
             logger.bind(job="new_type").error(
                 "Request error while connecting to external API. Error: {error}",
                 error=str(e),
-                serialize=True
             )
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
@@ -261,13 +249,12 @@ async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(a
         "Received request for /new_vendor with data: {data} by user: {user}",
         data=data,
         user=user,
-        serialize=True
     )
 
     async with httpx.AsyncClient() as client:
         try:
             json_data = json.dumps(data)
-            logger.bind(job="new_vendor").debug("Sending data to external API: {json_data}", json_data=json_data, serialize=True)
+            logger.bind(job="new_vendor").debug("Sending data to external API: {json_data}", json_data=json_data)
 
             response = await client.post(central_base_api_url, data=json_data, headers=headers)
             response.raise_for_status()
@@ -275,7 +262,6 @@ async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(a
             logger.bind(job="new_vendor").info(
                 "Successful response from external API for /new_vendor with data: {response_data}",
                 response_data=response.json(),
-                serialize=True
             )
 
             return response.json()
@@ -284,14 +270,12 @@ async def get_data_from_external_api(data: dict, user: Optional[str] = Depends(a
                 "External API error for /new_vendor. Status: {status_code}, Error: {error}",
                 status_code=e.response.status_code,
                 error=str(e),
-                serialize=True
             )
             raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
         except httpx.RequestError as e:
             logger.bind(job="new_vendor").error(
                 "Request error while connecting to external API for /new_vendor. Error: {error}",
                 error=str(e),
-                serialize=True
             )
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
