@@ -6,6 +6,7 @@ security = HTTPBearer()
 
 expected_token = settings.expected_token
 
+
 def authenticate(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     if token != expected_token:

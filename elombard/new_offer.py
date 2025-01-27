@@ -28,7 +28,7 @@ async def create_new_offer(
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer/"
     headers = {"Content-Type": "application/json; charset=utf-8"}
 
-    logger.bind(new_offer=True).info(
+    logger.bind(job="new_offer").info(
         "Received request for /new_offer with data: {data} by user: {user}",
         data=request_data.dict(),
         user=user,
@@ -39,7 +39,7 @@ async def create_new_offer(
             response = await client.post(central_base_api_url, json=request_data.dict(), headers=headers, timeout=20)
             response.raise_for_status()
 
-            logger.bind(new_offer=True).info(
+            logger.bind(job="new_offer").info(
                 "External API responded successfully for /new_offer with data: {response_data}",
                 response_data=response.json(),
             )
@@ -49,7 +49,7 @@ async def create_new_offer(
                 data=response.json(),
             )
         except httpx.HTTPStatusError as e:
-            logger.bind(new_offer=True).error(
+            logger.bind(job="new_offer").error(
                 "External API error for /new_offer. Status: {status_code}, Error: {error}",
                 status_code=e.response.status_code,
                 error=str(e),
@@ -59,7 +59,7 @@ async def create_new_offer(
                 detail="External API returned error",
             )
         except httpx.RequestError as e:
-            logger.bind(new_offer=True).error(
+            logger.bind(job="new_offer").error(
                 "Request error while connecting to external API for /new_offer. Error: {error}",
                 error=str(e),
             )

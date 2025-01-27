@@ -3,102 +3,53 @@ import requests
 import json
 import datetime
 
-# log_dir = "/var/log/fastapi"
-# os.makedirs(log_dir, exist_ok=True)
-
-logger.remove()
-
 loki_url = "http://192.168.11.5:3100/loki/api/v1/push"
-headers = {
-    "Content-Type": "application/json"
-}
+headers = {"Content-Type": "application/json"}
 
 
 async def send_to_loki(message):
+    """
+    Відправляє лог до Loki у форматі JSON.
+    """
     try:
         record = json.loads(message)
     except json.JSONDecodeError:
+        # Якщо отриманий message не є JSON'ом, розглядаємо його як звичайний рядок
         record = message
 
-    if isinstance(record, dict):
+    # Якщо ми змогли розпарсити message як dict, і там присутні ключі рівня та часу
+    if isinstance(record, dict) and "level" in record and "time" in record:
         level_name = record["level"]["name"]
-
-        log_data = {
-            "streams": [
-                {
-                    "stream": {"job": "skarbapi", "level": level_name},
-                    "values": [
-                        [
-                            str(int(record["time"].timestamp() * 1000000000)),
-                            record["message"]
-                        ]
-                    ]
-                }
-            ]
-        }
+        timestamp_str = str(int(record["time"].timestamp() * 1e9))
+        # Витягуємо job із record["extra"] якщо він там є, інакше ставимо "skarbapi"
+        job_name = record.get("extra", {}).get("job", "skarbapi")
+        log_message = record.get("message", "")
     else:
-        log_data = {
-            "streams": [
-                {
-                    "stream": {"job": "skarbapi", "level": "INFO"},
-                    "values": [
-                        [
-                            str(int(datetime.datetime.now().timestamp() * 1000000000)),
-                            record
-                        ]
-                    ]
-                }
-            ]
-        }
+        # Якщо структура не відповідає формату, логуватимемо з типом INFO і поточним часом
+        level_name = "INFO"
+        timestamp_str = str(int(datetime.datetime.now().timestamp() * 1e9))
+        job_name = "skarbapi"
+        log_message = str(record)
 
-    # Виконання POST запиту до Loki
+    # Формуємо JSON для Loki
+    log_data = {
+        "streams": [
+            {
+                "stream": {
+                    "job": job_name,
+                    "level": level_name
+                },
+                "values": [
+                    [timestamp_str, log_message]
+                ]
+            }
+        ]
+    }
+
+    # Виконуємо POST-запит до Loki
     response = requests.post(loki_url, headers=headers, data=json.dumps(log_data))
     return response.status_code
 
-
-# # Загальний лог-файл для відправки в Loki
-# logger.add(send_to_loki, level="INFO")
-
-# Логи для окремих маршрутів, також відправляються в Loki
-logger.add(send_to_loki, level="INFO", filter=lambda record: "check_zok_by_phone" in record["extra"])
-logger.add(send_to_loki, level="INFO", filter=lambda record: "new_delay" in record["extra"])
-logger.add(send_to_loki, level="INFO", filter=lambda record: "get_vendor" in record["extra"])
-logger.add(send_to_loki, level="INFO", filter=lambda record: "new_type" in record["extra"])
-logger.add(send_to_loki, level="INFO", filter=lambda record: "dogovorhistory" in record["extra"])
-logger.add(send_to_loki, level="INFO", filter=lambda record: "gettype" in record["extra"])
-logger.add(send_to_loki, level="INFO", filter=lambda record: "new_vendor" in record["extra"])
-logger.add(send_to_loki, level="INFO", filter=lambda record: "new_offer" in record["extra"])
-logger.add(send_to_loki, level="INFO", filter=lambda record: "get_bonus_withdraw" in record["extra"])
-
-
-# from loguru import logger
-# import os
-
-# log_dir = "/var/log/fastapi"
-# os.makedirs(log_dir, exist_ok=True)
-
-# logger.remove()
-
-# # Загальний лог-файл
-# logger.add(f"{log_dir}/general.json", format="{time} {level} {message} {extra}", serialize=True, rotation="10 MB",
-#            retention="10 days", compression="zip")
-
-# # Логи для окремих маршрутів
-# logger.add(f"{log_dir}/check_zok_by_phone.json", serialize=True,
-#            filter=lambda record: "check_zok_by_phone" in record["extra"], rotation="5 MB", retention="7 days")
-# logger.add(f"{log_dir}/new_delay.json", serialize=True,
-#            filter=lambda record: "new_delay" in record["extra"], rotation="5 MB", retention="7 days")
-# logger.add(f"{log_dir}/get_vendor.json", serialize=True,
-#            filter=lambda record: "get_vendor" in record["extra"], rotation="5 MB", retention="7 days")
-# logger.add(f"{log_dir}/new_type.json", serialize=True,
-#            filter=lambda record: "new_type" in record["extra"], rotation="5 MB", retention="7 days")
-# logger.add(f"{log_dir}/dogovorhistory.json", serialize=True,
-#            filter=lambda record: "dogovorhistory" in record["extra"], rotation="5 MB", retention="7 days")
-# logger.add(f"{log_dir}/gettype.json", serialize=True,
-#            filter=lambda record: "gettype" in record["extra"], rotation="5 MB", retention="7 days")
-# logger.add(f"{log_dir}/new_vendor.json", serialize=True,
-#            filter=lambda record: "new_vendor" in record["extra"], rotation="5 MB", retention="7 days")
-# logger.add(f"{log_dir}/new_offer.json", serialize=True,
-#            filter=lambda record: "new_offer" in record["extra"], rotation="5 MB", retention="7 days")
-# logger.add(f"{log_dir}/get_bonus_withdraw.json", serialize=True,
-#            filter=lambda record: "get_bonus_withdraw" in record["extra"], rotation="5 MB", retention="7 days")
+# Прибираємо купу фільтрів, замінюємо на єдиний logger.add
+logger.remove()  # На випадок, якщо були додані інші "handlers" раніше
+logger.add(send_to_loki, level="INFO")

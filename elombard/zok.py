@@ -30,7 +30,7 @@ async def get_zok_by_phone(
         f"?phone={phone}&date={date}"
     )
 
-    logger.bind(check_zok_by_phone=True).info(
+    logger.bind(job="check_zok_by_phone").info(
         "Received request for /check_zok_by_phone with phone: {phone}, date: {date}, user: {user}",
         phone=phone,
         date=date,
@@ -42,14 +42,14 @@ async def get_zok_by_phone(
             response = await client.get(central_base_api_url)
             response.raise_for_status()
 
-            logger.bind(check_zok_by_phone=True).info(
+            logger.bind(job="check_zok_by_phone").info(
                 "External API responded successfully for /check_zok_by_phone with data: {response_data}",
                 response_data=response.json(),
             )
 
             return response.json()
         except httpx.HTTPStatusError as e:
-            logger.bind(check_zok_by_phone=True).error(
+            logger.bind(job="check_zok_by_phone").error(
                 "External API error for /check_zok_by_phone. Status: {status_code}, Error: {error}",
                 status_code=e.response.status_code,
                 error=str(e),
@@ -59,7 +59,7 @@ async def get_zok_by_phone(
                 detail="External API returned error",
             )
         except httpx.RequestError as e:
-            logger.bind(check_zok_by_phone=True).error(
+            logger.bind(job="check_zok_by_phone").error(
                 "Request error while connecting to external API for /check_zok_by_phone. Error: {error}",
                 error=str(e),
             )
@@ -75,7 +75,7 @@ async def get_bonus_withdraw(client_id: str, user: Optional[str] = Depends(authe
 
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/checkmoneyBonusWithdraw/{client_id}"
 
-    logger.bind(get_bonus_withdraw=True).info(
+    logger.bind(job="get_bonus_withdraw").info(
         "Received request for /get_bonus_withdraw with client_id: {client_id}, user: {user}",
         client_id=client_id, user=user)
 
@@ -84,14 +84,14 @@ async def get_bonus_withdraw(client_id: str, user: Optional[str] = Depends(authe
             response = await client.get(central_base_api_url)
             response.raise_for_status()
 
-            logger.bind(get_bonus_withdraw=True).info(
+            logger.bind(job="get_bonus_withdraw").info(
                 "External API responded successfully for /get_bonus_withdraw with data: {response_data}",
                 response_data=response.json(),
             )
 
             return response.json()
         except httpx.HTTPStatusError as e:
-            logger.bind(get_bonus_withdraw=True).error(
+            logger.bind(job="get_bonus_withdraw").error(
                 "External API error for /get_bonus_withdraw. Status: {status_code}, Error: {error}",
                 status_code=e.response.status_code,
                 error=str(e),
@@ -101,7 +101,7 @@ async def get_bonus_withdraw(client_id: str, user: Optional[str] = Depends(authe
                 detail="External API returned error",
             )
         except httpx.RequestError as e:
-            logger.bind(get_bonus_withdraw=True).error(
+            logger.bind(job="get_bonus_withdraw").error(
                 "Request error while connecting to external API for /get_bonus_withdraw. Error: {error}",
                 error=str(e),
             )
