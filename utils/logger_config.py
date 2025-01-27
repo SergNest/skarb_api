@@ -30,6 +30,10 @@ async def send_to_loki(message):
         timestamp_str = str(int(datetime.datetime.now().timestamp() * 1e9))
         job_name = "skarbapi"
         log_message = str(record)
+    
+    print("--- DEBUG record ---")
+    print(record)
+    print("--------------------")
 
     # Формуємо JSON для Loki
     log_data = {
