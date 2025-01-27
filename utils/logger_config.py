@@ -25,7 +25,6 @@ async def send_to_loki(message):
         log_message = str(record)
 
     print("--- DEBUG record ---")
-    print(record)
     print(job_name)
     print("--------------------")
     
