@@ -12,6 +12,10 @@ async def send_to_loki(message):
     except json.JSONDecodeError:
         record = message
 
+    print("--- DEBUG record ---")
+    print(record)
+    print("--------------------")
+
     if isinstance(record, dict) and "level" in record and "time" in record:
         level_name = record["level"]["name"]
         timestamp_str = str(int(record["time"].timestamp() * 1e9))
