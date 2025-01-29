@@ -5,8 +5,8 @@ from auth import authenticate
 from conf.config import settings
 from typing import Optional, Dict
 
-
-from elombard.schema import OfferSuccessResponse, OfferErrorResponse, OfferRequest
+from elombard.schema import OfferSuccessResponse, OfferErrorResponse, OfferRequest, SOfferRequestXMl, \
+    SOfferErrorResponseXMl, SOfferSuccessResponseXMl
 from utils.logger_config import logger
 
 router = APIRouter(
@@ -24,8 +24,8 @@ router = APIRouter(
     },
 )
 async def create_new_offer(
-    request_data: OfferRequest,
-    user: Optional[str] = Depends(authenticate),
+        request_data: OfferRequest,
+        user: Optional[str] = Depends(authenticate),
 ):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer_main/"
     headers = {"Content-Type": "application/json; charset=utf-8"}
@@ -75,20 +75,21 @@ def parse_xml_to_dict(xml_data: str) -> Dict:
     """Функція для парсингу XML у Python-словник"""
     root = ET.fromstring(xml_data)
     data_dict = {child.tag: child.text for child in root}
-    data_dict["TypeRequest"] = root.attrib.get("TypeRequest", "")
+    data_dict["TypeRequest"] = root.attrib.get("TypeRequest", "LidOffer")
     return data_dict
 
 
 @router.post(
     "/new_offer_xml",
+    response_model=SOfferSuccessResponseXMl,
     responses={
-        400: {"description": "Bad Request"},
-        500: {"description": "Internal Server Error"},
+        400: {"model": SOfferErrorResponseXMl, "description": "Bad Request"},
+        500: {"model": SOfferErrorResponseXMl, "description": "Internal Server Error"},
     },
 )
 async def receive_xml_and_send_json(
-    request: Request,
-    user: Optional[str] = Depends(authenticate),
+        request: Request,
+        user: Optional[str] = Depends(authenticate),
 ):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer_json/"
     headers = {"Content-Type": "application/json; charset=utf-8"}
@@ -104,14 +105,15 @@ async def receive_xml_and_send_json(
 
     try:
         json_data = parse_xml_to_dict(xml_str)
+        validated_data = OfferRequest(**json_data)  # Валідація через Pydantic
 
         logger.bind(job="new_offer_xml").info(
             "Converted XML to JSON: {json_data}",
-            json_data=json_data,
+            json_data=validated_data.dict(),
         )
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(central_base_api_url, json=json_data, headers=headers, timeout=20)
+            response = await client.post(central_base_api_url, json=validated_data.dict(), headers=headers, timeout=20)
             response.raise_for_status()
 
             logger.bind(job="new_offer_xml").info(
@@ -119,7 +121,7 @@ async def receive_xml_and_send_json(
                 response_data=response.json(),
             )
 
-            return {"status": "success", "data": response.json()}
+            return SOfferErrorResponseXMl(status="success", data=response.json())
     except ET.ParseError:
         logger.bind(job="new_offer_xml").error("Invalid XML received")
         raise HTTPException(status_code=400, detail="Invalid XML format")

@@ -39,7 +39,7 @@ async def get_zok_by_phone(
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(central_base_api_url, timeout=10)
+            response = await client.get(central_base_api_url, timeout=15)
             response.raise_for_status()
 
             logger.bind(job="check_zok_by_phone").info(

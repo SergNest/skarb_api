@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict
 
 from pydantic import BaseModel, Field
 
@@ -34,4 +34,29 @@ class SBonusWithdraw(BaseModel):
     last_zok_org: str
     Phone: str
     Error: str
+
+
+class SOfferSuccessResponseXMl(BaseModel):
+    status: str
+    data: Dict
+
+
+class SOfferErrorResponseXMl(BaseModel):
+    status: str = Field(..., description="Status of the request")
+    error: str = Field(..., description="Error message")
+
+
+class SOfferRequestXMl(BaseModel):
+    TypeRequest: Optional[str] = "LidOffer"
+    tel: Optional[str]
+    tip: Optional[str]
+    vid: Optional[str]
+    UID: Optional[str]
+    srok: Optional[str]
+    hint_short: Optional[str]
+    hint_long: Optional[str]
+    SMS: Optional[str]
+    otpravitel: Optional[str]
+    actionType: Optional[str]
+    rowId: Optional[str]
 
