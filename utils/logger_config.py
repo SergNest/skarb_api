@@ -7,6 +7,7 @@ import time
 loki_url = "http://192.168.11.5:3100/loki/api/v1/push"
 headers = {"Content-Type": "application/json"}
 
+
 async def send_to_loki(message):
     try:
         record = json.loads(message)  # Loguru тепер видає JSON
@@ -20,7 +21,6 @@ async def send_to_loki(message):
     # Витягуємо рівень логування
     level_name = record.get("level", {}).get("name", "INFO")
     timestamp_str = str(int(record["time"]["timestamp"] * 1e9))
-
 
     # Витягуємо job або використовуємо дефолтне значення
     job_name = record.get("extra", {}).get("job", "skarbapi")

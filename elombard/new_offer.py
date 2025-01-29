@@ -1,8 +1,10 @@
 import httpx
-from fastapi import APIRouter, HTTPException, Depends
+import xml.etree.ElementTree as ET
+from fastapi import APIRouter, HTTPException, Depends, Request
 from auth import authenticate
 from conf.config import settings
-from typing import Optional
+from typing import Optional, Dict
+
 
 from elombard.schema import OfferSuccessResponse, OfferErrorResponse, OfferRequest
 from utils.logger_config import logger
@@ -25,7 +27,7 @@ async def create_new_offer(
     request_data: OfferRequest,
     user: Optional[str] = Depends(authenticate),
 ):
-    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer/"
+    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer_main/"
     headers = {"Content-Type": "application/json; charset=utf-8"}
 
     logger.bind(job="new_offer").info(
@@ -36,7 +38,7 @@ async def create_new_offer(
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(central_base_api_url, json=request_data.dict(), headers=headers, timeout=20)
+            response = await client.post(central_base_api_url, json=request_data.dict(), headers=headers, timeout=30)
             response.raise_for_status()
 
             logger.bind(job="new_offer").info(
@@ -67,3 +69,76 @@ async def create_new_offer(
                 status_code=500,
                 detail="Error connecting to external API",
             )
+
+
+def parse_xml_to_dict(xml_data: str) -> Dict:
+    """Функція для парсингу XML у Python-словник"""
+    root = ET.fromstring(xml_data)
+    data_dict = {child.tag: child.text for child in root}
+    data_dict["TypeRequest"] = root.attrib.get("TypeRequest", "")
+    return data_dict
+
+
+@router.post(
+    "/new_offer_xml",
+    responses={
+        400: {"description": "Bad Request"},
+        500: {"description": "Internal Server Error"},
+    },
+)
+async def receive_xml_and_send_json(
+    request: Request,
+    user: Optional[str] = Depends(authenticate),
+):
+    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer_json/"
+    headers = {"Content-Type": "application/json; charset=utf-8"}
+
+    xml_body = await request.body()
+    xml_str = xml_body.decode("utf-8")
+
+    logger.bind(job="new_offer_xml").info(
+        "Received XML request for /new_offer_xml: {data} by user: {user}",
+        data=xml_str,
+        user=user,
+    )
+
+    try:
+        json_data = parse_xml_to_dict(xml_str)
+
+        logger.bind(job="new_offer_xml").info(
+            "Converted XML to JSON: {json_data}",
+            json_data=json_data,
+        )
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(central_base_api_url, json=json_data, headers=headers, timeout=20)
+            response.raise_for_status()
+
+            logger.bind(job="new_offer_xml").info(
+                "External API responded successfully for /new_offer_xml with response: {response_data}",
+                response_data=response.json(),
+            )
+
+            return {"status": "success", "data": response.json()}
+    except ET.ParseError:
+        logger.bind(job="new_offer_xml").error("Invalid XML received")
+        raise HTTPException(status_code=400, detail="Invalid XML format")
+    except httpx.HTTPStatusError as e:
+        logger.bind(job="new_offer_xml").error(
+            "External API error for /new_offer_xml. Status: {status_code}, Error: {error}",
+            status_code=e.response.status_code,
+            error=str(e),
+        )
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail="External API returned error",
+        )
+    except httpx.RequestError as e:
+        logger.bind(job="new_offer_xml").error(
+            "Request error while connecting to external API for /new_offer_xml. Error: {error}",
+            error=str(e),
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Error connecting to external API",
+        )
