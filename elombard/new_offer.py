@@ -27,7 +27,7 @@ async def create_new_offer(
         request_data: OfferRequest,
         user: Optional[str] = Depends(authenticate),
 ):
-    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer_main/"
+    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer/"
     headers = {"Content-Type": "application/json; charset=utf-8"}
 
     logger.bind(job="new_offer").info(
