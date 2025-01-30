@@ -6,7 +6,7 @@ from conf.config import settings
 from typing import Optional, Dict
 
 from elombard.schema import OfferSuccessResponse, OfferErrorResponse, OfferRequest, SOfferRequestXMl, \
-    SOfferErrorResponseXMl, SOfferSuccessResponseXMl
+    SOfferErrorResponseXMl
 from utils.logger_config import logger
 
 router = APIRouter(
@@ -81,7 +81,7 @@ def parse_xml_to_dict(xml_data: str) -> Dict:
 
 @router.post(
     "/new_offer_xml",
-    response_model=SOfferSuccessResponseXMl,
+    response_model=OfferSuccessResponse,
     responses={
         400: {"model": SOfferErrorResponseXMl, "description": "Bad Request"},
         500: {"model": SOfferErrorResponseXMl, "description": "Internal Server Error"},
@@ -121,7 +121,7 @@ async def receive_xml_and_send_json(
                 response_data=response.json(),
             )
 
-            return SOfferErrorResponseXMl(status="success", data=response.json())
+            return OfferSuccessResponse(status="success", data=response.json())
     except ET.ParseError:
         logger.bind(job="new_offer_xml").error("Invalid XML received")
         raise HTTPException(status_code=400, detail="Invalid XML format")
