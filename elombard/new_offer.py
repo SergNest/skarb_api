@@ -91,7 +91,7 @@ async def receive_xml_and_send_json(
         request: Request,
         user: Optional[str] = Depends(authenticate),
 ):
-    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer_json/"
+    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer_main/"
     headers = {"Content-Type": "application/json; charset=utf-8"}
 
     xml_body = await request.body()
