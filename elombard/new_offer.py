@@ -105,7 +105,7 @@ async def receive_xml_and_send_json(
 
     try:
         json_data = parse_xml_to_dict(xml_str)
-        validated_data = OfferRequest(**json_data)  # Валідація через Pydantic
+        validated_data = SOfferRequestXMl(**json_data)  # Валідація через Pydantic
 
         logger.bind(job="new_offer_xml").info(
             "Converted XML to JSON: {json_data}",
