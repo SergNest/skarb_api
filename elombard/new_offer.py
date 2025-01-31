@@ -107,7 +107,7 @@ async def receive_xml_and_send_json(
         )
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(central_base_api_url, json=validated_data.dict(), headers=headers, timeout=20)
+            response = await client.post(central_base_api_url, json=validated_data.dict(), headers=headers, timeout=30)
             response.raise_for_status()
 
             logger.bind(job="new_offer_xml").info(
