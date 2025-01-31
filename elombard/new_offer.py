@@ -1,6 +1,8 @@
 import httpx
 import xml.etree.ElementTree as ET
 from fastapi import APIRouter, HTTPException, Depends, Request
+from httpx import TimeoutException
+
 from auth import authenticate
 from conf.config import settings
 from typing import Optional, Dict
@@ -15,18 +17,10 @@ router = APIRouter(
 )
 
 
-@router.post(
-    "/new_offer",
-    response_model=OfferSuccessResponse,
-    responses={
-        400: {"model": OfferErrorResponse, "description": "Bad Request"},
-        500: {"model": OfferErrorResponse, "description": "Internal Server Error"},
-    },
-)
-async def create_new_offer(
-        request_data: OfferRequest,
-        user: Optional[str] = Depends(authenticate),
-):
+@router.post("/new_offer", response_model=OfferSuccessResponse,
+             responses={400: {"model": OfferErrorResponse, "description": "Bad Request"},
+                        500: {"model": OfferErrorResponse, "description": "Internal Server Error"}})
+async def create_new_offer(request_data: OfferRequest, user: Optional[str] = Depends(authenticate)):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer/"
     headers = {"Content-Type": "application/json; charset=utf-8"}
 
@@ -46,29 +40,29 @@ async def create_new_offer(
                 response_data=response.json(),
             )
 
-            return OfferSuccessResponse(
-                status="success",
-                data=response.json(),
+            return OfferSuccessResponse(status="success", data=response.json())
+
+        except TimeoutException:
+            logger.bind(job="new_offer").error(
+                "Timeout error while connecting to external API for /new_offer. URL: {url}",
+                url=central_base_api_url,
             )
+            raise HTTPException(status_code=504, detail="External API timeout")
+
         except httpx.HTTPStatusError as e:
             logger.bind(job="new_offer").error(
                 "External API error for /new_offer. Status: {status_code}, Error: {error}",
                 status_code=e.response.status_code,
                 error=str(e),
             )
-            raise HTTPException(
-                status_code=e.response.status_code,
-                detail="External API returned error",
-            )
+            raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
+
         except httpx.RequestError as e:
             logger.bind(job="new_offer").error(
                 "Request error while connecting to external API for /new_offer. Error: {error}",
                 error=str(e),
             )
-            raise HTTPException(
-                status_code=500,
-                detail="Error connecting to external API",
-            )
+            raise HTTPException(status_code=500, detail="Error connecting to external API")
 
 
 def parse_xml_to_dict(xml_data: str) -> Dict:
@@ -122,6 +116,12 @@ async def receive_xml_and_send_json(
             )
 
             return OfferSuccessResponse(status="success", data=response.json())
+    except TimeoutException:
+        logger.bind(job="new_offer_xml").error(
+            "Timeout error while connecting to external API for /new_offer_xml. URL: {url}",
+            url=central_base_api_url,
+        )
+        raise HTTPException(status_code=504, detail="External API timeout")
     except ET.ParseError:
         logger.bind(job="new_offer_xml").error("Invalid XML received")
         raise HTTPException(status_code=400, detail="Invalid XML format")
