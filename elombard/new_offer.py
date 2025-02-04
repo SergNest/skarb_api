@@ -5,7 +5,7 @@ from httpx import TimeoutException
 
 from auth import authenticate
 from conf.config import settings
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from elombard.schema import OfferSuccessResponse, OfferErrorResponse, OfferRequest, SOfferRequestXMl, \
     SOfferErrorResponseXMl
@@ -17,22 +17,34 @@ router = APIRouter(
 )
 
 
-@router.post("/new_offer", response_model=OfferSuccessResponse,
-             responses={400: {"model": OfferErrorResponse, "description": "Bad Request"},
-                        500: {"model": OfferErrorResponse, "description": "Internal Server Error"}})
-async def create_new_offer(request_data: OfferRequest, user: Optional[str] = Depends(authenticate)):
+@router.post(
+    "/new_offer",
+    response_model=OfferSuccessResponse,
+    responses={
+        400: {"model": OfferErrorResponse, "description": "Bad Request"},
+        500: {"model": OfferErrorResponse, "description": "Internal Server Error"}
+    }
+)
+async def create_new_offer(request_data: List[OfferRequest], user: Optional[str] = Depends(authenticate)):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/new_offer/"
     headers = {"Content-Type": "application/json; charset=utf-8"}
 
+    # Логування прийнятих даних – перетворюємо кожен об'єкт на словник
     logger.bind(job="new_offer").info(
         "Received request for /new_offer with data: {data} by user: {user}",
-        data=request_data.dict(),
+        data=[offer.dict() for offer in request_data],
         user=user,
     )
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(central_base_api_url, json=request_data.dict(), headers=headers, timeout=30)
+            # Припускаємо, що зовнішнє API очікує масив об'єктів
+            response = await client.post(
+                central_base_api_url,
+                json=[offer.dict() for offer in request_data],
+                headers=headers,
+                timeout=30
+            )
             response.raise_for_status()
 
             logger.bind(job="new_offer").info(
