@@ -9,7 +9,14 @@ from conf.config import settings
 from aiogram import Bot
 
 BOT = Bot(token=settings.bot_token)
-emoji_dict = dict(buy="Куплено 🟢", sell="Продано 🔴", USD="🇺🇸", EUR="🇪🇺")
+
+emoji_dict = dict(
+    buy="Куплено 🟢",
+    sell="Продано 🔴",
+    storno="Сторно (відміна) 🟡",
+    USD="🇺🇸",
+    EUR="🇪🇺"
+)
 
 expected_token = settings.expected_token
 security = HTTPBearer()
