@@ -59,3 +59,14 @@ class SOfferRequestXMl(BaseModel):
 class SPhonePS(BaseModel):
     tech: str | None = None
     gold: str | None = None
+
+
+# Опис внутрішньої моделі для телефону
+class PhoneInfo(BaseModel):
+    gold: str
+    tech: str
+
+
+# Опис основної моделі, де ключі – рядки, а значення – PhoneInfo
+class DataSchema(BaseModel):
+    __root__: Dict[str, PhoneInfo]
