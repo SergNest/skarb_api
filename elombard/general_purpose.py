@@ -61,9 +61,9 @@ async def get_phone_ps(search: str, user: Optional[str] = Depends(authenticate))
 @cache(expire=1800)
 async def get_phone(user: Optional[str] = Depends(authenticate)):
 
-    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/get_phone_ps"
+    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/get_phone"
 
-    logger.bind(job="get_phone_ps").info(
+    logger.bind(job="get_phone").info(
         "Received request for search: {search} by user: {user}",
         user=user,
     )
