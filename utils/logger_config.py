@@ -1,8 +1,6 @@
 from loguru import logger
 import requests
 import json
-import datetime
-import time 
 
 loki_url = "http://192.168.11.5:3100/loki/api/v1/push"
 headers = {"Content-Type": "application/json"}

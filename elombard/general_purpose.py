@@ -64,8 +64,8 @@ async def get_phone(user: Optional[str] = Depends(authenticate)):
     central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/get_phone"
 
     logger.bind(job="get_phone").info(
-        "Received request for search: {search} by user: {user}",
-        user=user,
+         "Received request by user: {user}",
+        user=user
     )
 
     async with httpx.AsyncClient() as client:
@@ -74,21 +74,21 @@ async def get_phone(user: Optional[str] = Depends(authenticate)):
             response.raise_for_status()
 
             logger.bind(job="get_phone").info(
-                "Successful response for search: {search} with data: {data}",
-                data=response.json(),
+                "Successful response for data: {data}",
+                data=response.json()
             )
 
             return response.json()
         except httpx.HTTPStatusError as e:
             logger.bind(job="get_phone").error(
-                "External API error for search: {search}. Status: {status_code}, Error: {error}",
+                "External API error. Status: {status_code}, Error: {error}",
                 status_code=e.response.status_code,
-                error=str(e),
+                error=str(e)
             )
             raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
         except httpx.RequestError as e:
             logger.bind(job="get_phone").error(
-                "Request error for search: {search}. Error: {error}",
-                error=str(e),
+                "Request error. Error: {error}",
+                error=str(e)
             )
             raise HTTPException(status_code=500, detail="Error connecting to external API")
