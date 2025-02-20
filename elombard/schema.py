@@ -55,3 +55,7 @@ class SOfferRequestXMl(BaseModel):
     actionType: Optional[str]
     rowId: Optional[str]
 
+
+class SPhonePS(BaseModel):
+    tech: str
+    gold: str

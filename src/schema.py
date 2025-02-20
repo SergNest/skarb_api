@@ -17,8 +17,3 @@ class SVendor(BaseModel):
     id: int
 
 
-class SZok(BaseModel):
-    Error: bool
-    TextError: str
-    InZok: bool | None = None
-    ZokDate: Optional[datetime] = None
