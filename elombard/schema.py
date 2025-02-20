@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Dict
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 
 class SZok(BaseModel):
@@ -68,5 +68,5 @@ class PhoneInfo(BaseModel):
 
 
 # Опис основної моделі, де ключі – рядки, а значення – PhoneInfo
-class DataSchema(BaseModel):
-    __root__: Dict[str, PhoneInfo]
+class DataSchema(RootModel[Dict[str, PhoneInfo]]):
+    pass
