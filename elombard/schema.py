@@ -58,4 +58,4 @@ class SOfferRequestXMl(BaseModel):
 
 class SPhonePS(BaseModel):
     tech: str | None = None
-    gold: str
+    gold: str | None = None
