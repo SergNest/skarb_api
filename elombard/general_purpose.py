@@ -3,7 +3,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi_cache.decorator import cache
 
-from typing import Optional
+from typing import Optional, List
 
 from auth import authenticate
 from elombard.schema import SPhonePS
@@ -16,7 +16,7 @@ router = APIRouter(
 )
 
 
-@router.get("/get_phone_ps/{search}", response_model=SPhonePS)
+@router.get("/get_phone_ps/{search}", response_model=List[SPhonePS])
 @cache(expire=3600)
 async def get_phone_ps(search: str, user: Optional[str] = Depends(authenticate)):
 
