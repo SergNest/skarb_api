@@ -13,6 +13,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 from starlette.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from auth import authenticate, expected_token
 from conf.config import settings
@@ -20,6 +21,7 @@ from src.schema import SType, SVendor
 
 from elombard.zok import router as zok
 from elombard.new_offer import router as offer
+from elombard.general_purpose import router as general
 from notifications.telegram_send import router as telegram_send
 from work_with_foto.photo_route import router as photo
 from sun_flower.sunflower_route import router as sf
@@ -29,6 +31,8 @@ from utils.logger_config import logger
 BLOCKED_PATHS = ["/.env", "/.git", "/.config", "/config.json", "/sslvpn_logon.shtml"]
 
 app = FastAPI()
+
+# app.mount("/main", StaticFiles(directory="dist", html=True), name="static")
 
 
 async def log_blocked_ip(ip_address):
@@ -56,7 +60,7 @@ app.include_router(telegram_send)
 app.include_router(photo)
 app.include_router(sf)
 app.include_router(offer)
-
+app.include_router(general)
 
 async def startup():
     redis = await aioredis.from_url(f"redis://{settings.redis_ip}:{settings.redis_port}", encoding="utf8",
