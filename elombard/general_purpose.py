@@ -57,7 +57,7 @@ async def get_phone_ps(search: str, user: Optional[str] = Depends(authenticate))
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
 
-@router.get("/get_phone", response_model=DataSchema)
+@router.get("/get_phone_all", response_model=DataSchema)
 @cache(expire=1800)
 async def get_phone(user: Optional[str] = Depends(authenticate)):
 
