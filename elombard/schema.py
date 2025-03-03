@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Dict
+from typing import List, Optional, Dict
 
 from pydantic import BaseModel, Field, RootModel
 
@@ -72,5 +72,10 @@ class DataSchema(RootModel[Dict[str, PhoneInfo]]):
     pass
 
 
+class PhoneEntry(BaseModel):
+    id: str  # E14, E12 тощо
+    gold: str
+    tech: str
+
 class AddPhoneSchema(BaseModel):
-    phones: Dict[str, PhoneInfo]  # Очікує словник, де ключ - номер, а значення - PhoneInfo
+    phones: List[PhoneEntry]  # Масив об'єктів з id, gold, tech
