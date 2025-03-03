@@ -6,7 +6,7 @@ from fastapi_cache.decorator import cache
 from typing import Optional, List
 
 from auth import authenticate
-from elombard.schema import SPhonePS, DataSchema
+from elombard.schema import AddPhoneSchema, SPhonePS, DataSchema
 from conf.config import settings
 from utils.logger_config import logger
 
@@ -89,6 +89,41 @@ async def get_phone(user: Optional[str] = Depends(authenticate)):
         except httpx.RequestError as e:
             logger.bind(job="get_phone").error(
                 "Request error. Error: {error}",
+                error=str(e)
+            )
+            raise HTTPException(status_code=500, detail="Error connecting to external API")
+
+
+@router.post("/add_phone", response_model=DataSchema)
+async def add_phone(phone_data: AddPhoneSchema, user: Optional[str] = Depends(authenticate)):
+    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/add_phone"
+    
+    logger.bind(job="add_phone").info(
+        "Received request to add phone: {phone_data} by user: {user}",
+        phone_data=phone_data.dict(),
+        user=user,
+    )
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(central_base_api_url, json=phone_data.dict())
+            response.raise_for_status()
+
+            logger.bind(job="add_phone").info(
+                "Successful addition of phone: {phone_data}",
+                phone_data=phone_data.dict()
+            )
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            logger.bind(job="add_phone").error(
+                "External API error while adding phone. Status: {status_code}, Error: {error}",
+                status_code=e.response.status_code,
+                error=str(e)
+            )
+            raise HTTPException(status_code=e.response.status_code, detail="External API returned error")
+        except httpx.RequestError as e:
+            logger.bind(job="add_phone").error(
+                "Request error while adding phone. Error: {error}",
                 error=str(e)
             )
             raise HTTPException(status_code=500, detail="Error connecting to external API")

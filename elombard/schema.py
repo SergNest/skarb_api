@@ -70,3 +70,7 @@ class PhoneInfo(BaseModel):
 # Опис основної моделі, де ключі – рядки, а значення – PhoneInfo
 class DataSchema(RootModel[Dict[str, PhoneInfo]]):
     pass
+
+
+class AddPhoneSchema(BaseModel):
+    phones: Dict[str, PhoneInfo]  # Очікує словник, де ключ - номер, а значення - PhoneInfo

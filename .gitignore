@@ -134,6 +134,7 @@ env.bak/
 venv.bak/
 skarb_venv/
 skarbenv/
+myenv/
 
 # Spyder project settings
 .spyderproject
