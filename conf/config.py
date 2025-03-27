@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     redis_ip: str = os.getenv('REDIS_IP', 'REDIS_IP')
     redis_port: str = os.getenv('REDIS_PORT', 'REDIS_PORT')
+    secret_key: str = os.getenv('SECRET_KEY', 'SECRET_KEY')
 
     class Config:
         env_file = ".env"

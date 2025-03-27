@@ -17,3 +17,6 @@ class SVendor(BaseModel):
     id: int
 
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str

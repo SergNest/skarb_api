@@ -15,9 +15,9 @@ from fastapi_cache.decorator import cache
 from starlette.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from auth import authenticate, expected_token
+from auth import authenticate, expected_token, create_access_token, verify_token
 from conf.config import settings
-from src.schema import SType, SVendor
+from src.schema import LoginRequest, SType, SVendor
 
 from elombard.zok import router as zok
 from elombard.new_offer import router as offer
@@ -29,6 +29,8 @@ from utils.logger_config import logger
 
 
 BLOCKED_PATHS = ["/.env", "/.git", "/.config", "/config.json", "/sslvpn_logon.shtml"]
+MAX_ATTEMPTS = 3
+BLOCK_SECONDS = 300
 
 app = FastAPI()
 
@@ -82,6 +84,42 @@ async def healthchecker():
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail="Error connecting to the database")
 
+@app.post("/auth/login")
+async def login(data: LoginRequest, request: Request):
+    ip = request.client.host
+    key = f"login_attempts:{data.username}:{ip}"
+
+    redis = FastAPICache.get_backend().redis
+    attempts = await redis.get(key)
+    attempts = int(attempts) if attempts else 0
+
+    if attempts >= MAX_ATTEMPTS:
+        raise HTTPException(status_code=429, detail="🔒 Too many attempts. Try later.")
+
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                f"http://{settings.ip_central}:{settings.port_central}/central/hs/Auth/check_password",
+                json={"Имя": data.username, "Пароль": data.password},
+                headers={"Content-Type": "application/json"},
+                timeout=5.0
+            )
+        if res.status_code == 200 and res.json().get("success"):
+            await redis.delete(key)
+            token = create_access_token({"sub": data.username})
+            return {"access_token": token, "token_type": "bearer"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"1C error: {e}")
+
+    await redis.incr(key)
+    await redis.expire(key, BLOCK_SECONDS)
+    raise HTTPException(status_code=401, detail="Invalid credentials")
+
+@app.get("/protected")
+async def protected(current_user: str = Depends(verify_token)):
+    return {"message": f"Привіт, {current_user}"}
+    
 
 @app.get("/")
 async def root():
