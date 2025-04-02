@@ -171,7 +171,7 @@ async def get_type_from_external_api(search: str, category_id: int, user: Option
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(central_base_api_url)
+            response = await client.get(central_base_api_url, timeout=10)
             response.raise_for_status()
 
             logger.bind(job="gettype").info(
