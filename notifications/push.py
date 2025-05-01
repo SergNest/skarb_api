@@ -3,10 +3,12 @@ import hashlib
 from datetime import date
 import xml.etree.ElementTree as ET
 
+from conf.config import settings
+
 async def send_web_push(uid: str, title: str, body: str, type_: str, link: str, message_text: str = "") -> dict:
-    point = "0203"  
-    date_valid = date(1, 1, 1).strftime("%Y-%m-%d")
-    secret = "5a3e3FGe^3"
+    
+    point = settings.point  
+    secret = settings.secret
 
     phash_raw = (point + secret).upper()
     phash = hashlib.md5(phash_raw.encode("utf-8")).hexdigest()
@@ -28,7 +30,7 @@ async def send_web_push(uid: str, title: str, body: str, type_: str, link: str, 
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post("http://e-lombard.com/api.php", data=payload)
+            response = await client.post(settings.elombard, data=payload)
            
             if response.status_code == 200:
                 try:
@@ -48,11 +50,11 @@ async def send_web_push(uid: str, title: str, body: str, type_: str, link: str, 
 
 
 async def send_app_push(phone: str, text: str, title: str) -> dict:
-    url = "https://auth.skarb.group/api/v1/notifications-service/send-batch"
+    url = settings.homenkoPushURL
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTQsImxvZ2luIjoibG9zZW5kIiwiaWF0IjoxNjU5Njg1NjkyfQ.ZKPz77ci46rjHQ8eIiORLmiwIwYBFU2_Eyr8t2Ee6Xs"
+        "Authorization": f"Bearer {settings.homenkoBearer}"
     }
 
     push_block = {

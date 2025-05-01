@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime, time
 from fastapi_cache import FastAPICache
-from notifications.viber import send_viber
-from notifications.sms import send_sms
+from notifications.sms import send_sms,  send_viber
 from notifications.push import send_web_push, send_app_push
 from notifications.templates import get_template
 from routers.schema import NotificationRequest
@@ -49,7 +48,7 @@ async def _send_now(data: NotificationRequest):
     elif data.channel == "sms":
         await send_sms(data.phone, msg, data.client_id)
     elif data.channel == "web_push":
-        # print("[WEB PUSH]", json.dumps(payload, ensure_ascii=False))
+        
         await send_web_push(
             uid=data.client_id,
             title=tmpl.get("title", ""),
