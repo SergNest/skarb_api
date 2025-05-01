@@ -23,12 +23,12 @@ class Settings(BaseSettings):
     point: str = os.getenv('POINT', 'POINT')    
     elombard: str = os.getenv('ELOMBARD', 'ELOMBARD')
 
-    homenkoPushURL: str = os.getenv('HOMENKOURL', 'HOMENKOURL') 
-    homenkoBearer: str = os.getenv('HOMENKOBEARER', 'HOMENKOBEARER') 
+    homenkopushurl: str = os.getenv('HOMENKOURL', 'HOMENKOURL') 
+    homenkobearer: str = os.getenv('HOMENKOBEARER', 'HOMENKOBEARER') 
 
     class Config:
         env_file = ".env"
         env_file_encoding = 'utf8'
-
+        extra = "ignore"
 
 settings = Settings()

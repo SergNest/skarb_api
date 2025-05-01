@@ -50,11 +50,11 @@ async def send_web_push(uid: str, title: str, body: str, type_: str, link: str, 
 
 
 async def send_app_push(phone: str, text: str, title: str) -> dict:
-    url = settings.homenkoPushURL
+    url = f"https://{settings.homenkopushurl}"
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": f"Bearer {settings.homenkoBearer}"
+        "Authorization": f"Bearer {settings.homenkobearer}"
     }
 
     push_block = {
