@@ -25,6 +25,7 @@ from elombard.general_purpose import router as general
 from notifications.telegram_send import router as telegram_send
 from work_with_foto.photo_route import router as photo
 from sun_flower.sunflower_route import router as sf
+from routers.notify import router as notify_router
 from utils.logger_config import logger
 
 
@@ -57,6 +58,7 @@ async def block_paths_middleware(request: Request, call_next):
     return await call_next(request)
 
 
+app.include_router(notify_router)
 app.include_router(zok)
 app.include_router(telegram_send)
 app.include_router(photo)
