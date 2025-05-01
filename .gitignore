@@ -150,7 +150,7 @@ myenv/
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
+templates.json
 # Pyre type checker
 .pyre/
 
