@@ -38,7 +38,7 @@ async def send_web_push(uid: str, title: str, body: str, type_: str, link: str, 
                     status = root.findtext("status")
                     if status == "1":
                         print(response.text)
-                        response_external_api = await client.post(f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/add_sms_statistic", data=root)
+                        response_external_api = await client.post(f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/add_sms_statistic/", data=root)
                         return {"success": True, "response": response.text}
                     else:
                         error_text = root.findtext("error") or "Unknown error"
