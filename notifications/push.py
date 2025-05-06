@@ -43,8 +43,8 @@ async def send_web_push(uid: str, title: str, body: str, type_: str, link: str, 
                         if send_item is not None:
                             json_data = {
                                 "uid": send_item.findtext("uid"),
-                                "id": send_item.findtext("id"),
-                                "channel": "web_push",
+                                "Идентификатор": send_item.findtext("id"),
+                                "Провайдер": "web_push",
                                 "phone": phone,
                                 "msg": message_text
                             }
