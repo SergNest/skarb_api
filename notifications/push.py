@@ -39,7 +39,7 @@ async def send_web_push(uid: str, title: str, body: str, type_: str, link: str, 
                     if status == "1":
                         print("123")
                         headers = {"Content-Type": "application/xml; charset=utf-8"}
-                        response_external_api = await client.post(f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/add_sms_statistic/", data=root, headers=headers)
+                        response_external_api = await client.post(f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/add_sms_statistic/", data=response.text, headers=headers)
                         print("234")
                         return {"success": True, "response": response.text}
                     else:
