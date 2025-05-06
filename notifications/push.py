@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 
 from conf.config import settings
 
-async def send_web_push(uid: str, title: str, body: str, type_: str, link: str, message_text: str = "") -> dict:
+async def send_web_push(uid: str, title: str, body: str, type_: str, link: str, message_text: str = "", phone = "") -> dict:
     
     point = settings.point  
     secret = settings.secret
@@ -31,24 +31,48 @@ async def send_web_push(uid: str, title: str, body: str, type_: str, link: str, 
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(settings.elombard, data=payload)
-           
+
             if response.status_code == 200:
                 try:
                     root = ET.fromstring(response.text)
                     status = root.findtext("status")
+
                     if status == "1":
-                        print("123")
-                        headers = {"Content-Type": "application/xml; charset=utf-8"}
-                        response_external_api = await client.post(f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/add_sms_statistic/", data=response.text, headers=headers)
-                        print("234")
-                        return {"success": True, "response": response.text}
+                        # Формуємо JSON на основі XML
+                        send_item = root.find(".//send_item")
+                        if send_item is not None:
+                            json_data = {
+                                "uid": send_item.findtext("uid"),
+                                "id": send_item.findtext("id"),
+                                "channel": "web_push",
+                                "phone": phone,
+                                "msg": message_text
+                            }
+
+                            headers = {"Content-Type": "application/json; charset=utf-8"}
+                            response_external_api = await client.post(
+                                f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/add_sms_statistic/",
+                                json=json_data,
+                                headers=headers
+                            )
+
+                            return {
+                                "success": True,
+                                "response": response.text,
+                                "external_api_status": response_external_api.status_code
+                            }
+                        else:
+                            return {"success": False, "error": "Missing <send_item> in response"}
+
                     else:
                         error_text = root.findtext("error") or "Unknown error"
                         return {"success": False, "error": error_text}
+
                 except Exception as parse_error:
                     return {"success": False, "error": f"XML parse error: {parse_error}"}
             else:
                 return {"success": False, "error": f"HTTP {response.status_code}: {response.text}"}
+
     except Exception as e:
         return {"success": False, "error": str(e)}
 

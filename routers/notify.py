@@ -55,7 +55,8 @@ async def _send_now(data: NotificationRequest):
             body=tmpl.get("text", msg),
             type_=tmpl.get("image", ""),
             link=tmpl.get("button_url", "https://www.skarb.com.ua/special"),
-            message_text=msg
+            message_text=msg,
+            phone=data.phone
         )
     elif data.channel == "app_push":
         await send_app_push(phone=data.phone, text=msg, title=tmpl.get("title", ""))
