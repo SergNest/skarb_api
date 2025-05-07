@@ -79,3 +79,8 @@ class PhoneEntry(BaseModel):
 
 class AddPhoneSchema(BaseModel):
     phones: List[PhoneEntry]  # Масив об'єктів з id, gold, tech
+
+
+class SBonus(BaseModel):
+    amount: int
+    

@@ -6,7 +6,7 @@ from fastapi_cache.decorator import cache
 from typing import Optional, List
 
 from auth import authenticate
-from elombard.schema import AddPhoneSchema, SPhonePS, DataSchema
+from elombard.schema import AddPhoneSchema, SPhonePS, DataSchema, SBonus
 from conf.config import settings
 from utils.logger_config import logger
 
@@ -125,5 +125,46 @@ async def add_phone(phone_data: AddPhoneSchema, user: Optional[str] = Depends(au
             logger.bind(job="add_phone").error(
                 "Request error while adding phone. Error: {error}",
                 error=str(e)
+            )
+            raise HTTPException(status_code=500, detail="Error connecting to external API")
+
+
+@router.get("/getbonus/{client_cod}/{date}", response_model=list[SBonus])
+@cache(expire=60)
+async def get_vendor_from_external_api(client_cod: str, date: str, user: Optional[str] = Depends(authenticate)):
+
+    central_base_api_url = f"http://{settings.ip_central}:{settings.port_central}/central/hs/elombard/get_bonus/{client_cod}/{date}"
+
+    logger.bind(job="get_bonus").info(
+        "Received request for search: {client_cod} by date: {date}",
+        client_cod=client_cod,
+        date=date,
+    )
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(central_base_api_url)
+            response.raise_for_status()
+
+            logger.bind(job="get_bonus").info(
+                "Successful response for search: {client_cod} with data: {date}",
+                client_cod=client_cod,
+                date=response.json(),
+            )
+
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            logger.bind(job="get_bonus").error(
+                "External API error for search: {client_cod}. Status: {status_code}, Error: {error}",
+                client_cod=client_cod,
+                status_code=e.response.status_code,
+                error=str(e),
+            )
+            raise HTTPException(status_code=e.response.status_code, detail=f"External API returned {str(e)}")
+        except httpx.RequestError as e:
+            logger.bind(job="get_bonus").error(
+                "Request error for search: {client_cod}. Error: {error}",
+                client_cod=client_cod,
+                error=str(e),
             )
             raise HTTPException(status_code=500, detail="Error connecting to external API")
