@@ -129,7 +129,7 @@ async def add_phone(phone_data: AddPhoneSchema, user: Optional[str] = Depends(au
             raise HTTPException(status_code=500, detail="Error connecting to external API")
 
 
-@router.get("/getbonus/{client_cod}/{date}", response_model=list[SBonus])
+@router.get("/getbonus/{client_cod}/{date}", response_model=SBonus)
 @cache(expire=60)
 async def get_vendor_from_external_api(client_cod: str, date: str, user: Optional[str] = Depends(authenticate)):
 
