@@ -82,5 +82,5 @@ class AddPhoneSchema(BaseModel):
 
 
 class SBonus(BaseModel):
-    amount: int
+    bonus: int
     
